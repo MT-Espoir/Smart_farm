@@ -8,7 +8,7 @@ const Healthcare = () => {
   const [images, setImages] = useState([]);
   const [selectedImage, setSelectedImage] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
-  const imagesPerPage = 6;
+  const imagesPerPage = 4;
 
   // State cho thông báo
   const [notification, setNotification] = useState({
@@ -258,14 +258,14 @@ const UploadArea = ({ onImageUpload }) => {
         
         {/* Pagination controls */}
         <div className="pagination">
-          <button
+          <button className='prev-btn'
             onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
             disabled={currentPage === 1}
           >
-            Previous
+            Prev
           </button>
           <span>{currentPage}</span>
-          <button
+          <button className='next-btn'
             onClick={() => setCurrentPage(p => p + 1)}
             disabled={indexOfLastImage >= images.length}
           >
