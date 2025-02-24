@@ -1,0 +1,1 @@
+model = load_model('src/model_data/model')
