@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Theo dõi cây trồng</title>
+    <style>
+        /* Kế thừa CSS từ dashboard */
+        .delete-btn {
+            background-color: #ff4444;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .delete-btn:hover {
+            background-color: #cc0000;
+        }
+                #sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: 60px;
+            height: 100%;
+            background: #000;
+            padding: 15px 0;
+            transition: 0.3s;
+            z-index: 1001;
+        }
+
+        #sidebar:hover {
+            width: 200px;
+        }
+
+        .nav-icon {
+            color: white;
+            font-size: 24px;
+            padding: 20px;
+            cursor: pointer;
+            white-space: nowrap;
+            overflow: hidden;
+        }
+        body { margin: 0; font-family: Arial; }
+        #sidebar { /* Giống dashboard */ }
+        .container { max-width: 1200px; margin: 20px auto; padding: 20px; }
+        .plant-form { background: #f5f5f5; padding: 20px; border-radius: 10px; }
+        .form-group { margin-bottom: 15px; }
+        input, textarea { width: 100%; padding: 8px; }
+        .alert-box { background: #fff3cd; padding: 15px; margin-bottom: 20px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; }
+        .status-dropdown { padding: 5px; border-radius: 4px; }
+    </style>
+</head>
+<body>
+    <div id="sidebar">
+        <div class="nav-icon" onclick="window.location.href='/'">☰ Data</div>
+        <div class="nav-icon" onclick="window.location.href='/predict'">🌿 Plant Check</div>
+        <div class="nav-icon" onclick="window.location.href='/plant_tracker'">🌱 Theo dõi cây</div>
+    </div>
+
+    <div class="container">
+        <h1>Quản lý cây trồng 🌿</h1>
+        <!-- Phần cảnh báo -->
+        <div class="alert-box" id="alerts-section">
+            <h3>⚠️ Cảnh báo</h3>
+            <div id="alerts-list"></div>
+        </div>
+
+        <!-- Form thêm cây mới -->
+        <div class="plant-form">
+            <h2>Thêm cây mới</h2>
+            <div class="form-group">
+                <label>Tên cây:</label>
+                <input type="text" id="plant-name" required>
+            </div>
+            <div class="form-group">
+                <label>Số ngày thu hoạch dự kiến:</label>
+                <input type="number" id="growth-days" required>
+            </div>
+            <div class="form-group">
+                <label>Ghi chú:</label>
+                <textarea id="plant-notes"></textarea>
+            </div>
+            <button onclick="addNewPlant()" class="control-btn">Thêm cây</button>
+        </div>
+
+        <!-- Bảng dữ liệu -->
+        <h2>Danh sách cây trồng</h2>
+        <table id="plants-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Tên cây</th>
+                    <th>Ngày trồng</th>
+                    <th>Ngày thu hoạch</th>
+                    <th>Trạng thái</th>
+                    <th>Thao tác</th>
+                </tr>
+            </thead>
+            <tbody id="plants-body"></tbody>
+        </table>
+    </div>
+
+    <script>
+        // Load dữ liệu ban đầu
+
+        window.onload = function() {
+            loadPlants();
+            loadAlerts();
+        }
+
+        function loadPlants() {
+            fetch('/api/plants')
+                .then(response => response.json())
+                .then(data => {
+                    renderPlants(data.plants);
+                })
+                .catch(error => console.error('Error loading plants:', error));
+        }
+
+        function renderPlants(plants) {
+            const tbody = document.getElementById('plants-body');
+            tbody.innerHTML = plants.map(plant => `
+                <tr>
+                    <td>${plant.plant_id}</td>
+                    <td>${plant.plant_name}</td>
+                    <td>${plant.planting_date}</td>
+                    <td>${plant.expected_harvest_date}</td>
+                    <td>
+                        <select class="status-dropdown"
+                                onchange="updateStatus(${plant.plant_id}, this.value)">
+                            <option value="growing" ${plant.status === 'growing' ? 'selected' : ''}>Đang phát triển</option>
+                            <option value="harvested" ${plant.status === 'harvested' ? 'selected' : ''}>Đã thu hoạch</option>
+                        </select>
+                    </td>
+                    <td>
+                        <button onclick="showDetails(${plant.plant_id})">Chi tiết</button>
+                        <button onclick="deletePlant(${plant.plant_id})" class="delete-btn">Xóa</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function loadAlerts() {
+            fetch('/plant_tracker')
+                .then(response => response.text())
+                .then(html => {
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(html, 'text/html');
+                    const alerts = JSON.parse(doc.getElementById('alerts-data').textContent);
+                    renderAlerts(alerts);
+                });
+        }
+
+        function renderAlerts(alerts) {
+            const alertsList = document.getElementById('alerts-list');
+            alertsList.innerHTML = alerts.map(alert => `
+                <div class="alert-item">
+                    <strong>${alert.plant_name}</strong>: ${alert.message}
+                </div>
+            `).join('');
+        }
+
+        function addNewPlant() {
+            const plantData = {
+                plant_name: document.getElementById('plant-name').value,
+                growth_days: document.getElementById('growth-days').value,
+                notes: document.getElementById('plant-notes').value
+            };
+
+            fetch('/add_plant', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(plantData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if(data.success) {
+                    alert('Thêm cây thành công!');
+                    loadPlants();
+                }
+            });
+        }
+        function deletePlant(plantId) {
+            if (confirm('Bạn có chắc chắn muốn xóa cây này?')) {
+                fetch('/delete_plant', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({plant_id: plantId})
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            alert('Xóa cây thành công!');
+                            loadPlants();
+                            loadAlerts();
+                        } else {
+                            alert('Không thể xóa cây. Vui lòng thử lại!');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert('Đã xảy ra lỗi khi xóa cây');
+                    });
+            }
+        }
+
+        function updateStatus(plantId, newStatus) {
+            fetch('/update_plant_status', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    plant_id: plantId,
+                    status: newStatus
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if(data.success) {
+                    loadPlants();
+                    loadAlerts();
+                }
+            });
+        }
+
+        function showDetails(plantId) {
+            window.location.href = `/plant_details/${plantId}`;
+        }
+    </script>
+</body>
+</html>

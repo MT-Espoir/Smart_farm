@@ -1,0 +1,83 @@
+.navigator {
+    position: fixed;
+    left: 0;
+    top: 0;
+    width: 200px;
+    height: 100%;
+    background-color: #000; /* solid black background */
+    color: white;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding-top: 20px;
+  }
+  
+  .logo {
+    position: absolute;
+    top: 5px;
+    right: 35px;
+    z-index: 10;
+    display: flex;
+    flex-direction: column; /* Chuyển sang cột, hiển thị img và h1 theo thứ tự */
+    align-items: center;    /* Căn giữa theo chiều ngang */
+    gap: 0px;               /* Khoảng cách giữa img và h1 (có thể điều chỉnh) */
+  }
+  
+  
+  .logo img {
+    width: 130px;  /* Điều chỉnh kích thước logo theo ý */
+    height: auto;
+  }
+  
+  .logo h1 {
+    font-size: 20px;
+    color: #fff;
+    text-align: center;
+    margin: 0; 
+  }
+  
+  .navigator ul {
+    list-style-type: none;
+    padding: 0;
+    width: 100%;
+    text-align: center;
+    margin-top: 100px;
+  }
+  
+  .navigator li {
+    width: 100%;
+    margin: 30px 0;
+    display: flex;
+    justify-content: center; /* Căn giữa nội dung */
+}
+
+.navigator a {
+    color: white;
+    text-decoration: none;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 10px 15px;
+    border-radius: 8px; /* Bo góc cho đẹp hơn */
+    transition: background 0.3s ease-in-out, color 0.3s ease-in-out;
+}
+
+.navigator li:hover a {
+    background-color: rgba(50, 205, 50, 0.2); /* Nền chỉ bọc quanh icon + text */
+}
+
+.navigator li:hover .icon,
+.navigator li:hover span {
+    color: #32CD32; /* Đổi màu chữ và icon khi hover */
+}
+
+  
+  .navigator .icon {
+    color: limegreen; 
+    font-size: 32px;
+    margin-bottom: 5px;
+  }
+
+  .navigator span {
+    font-size: 14px;
+  }
