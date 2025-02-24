@@ -136,7 +136,7 @@ const UploadArea = ({ onImageUpload }) => {
           onChange={(e) => handleFiles(e.target.files)}
           style={{ display: 'none' }}
         />
-        <p>Drag and drop images here or click to select</p>
+        <p>Nhấn vào đây để upload ảnh</p>
       </div>
     );
   };
@@ -156,9 +156,9 @@ const UploadArea = ({ onImageUpload }) => {
           />
           {image.prediction && (
             <div className="prediction-info">
-              <p className="disease-label">Disease: {image.prediction.label}</p>
+              <p className="disease-label">Bệnh: {image.prediction.label}</p>
               <p className="confidence">
-                Confidence: {(image.prediction.confidence * 100).toFixed(2)}%
+                Dự đoán: {(image.prediction.confidence * 100).toFixed(2)}%
               </p>
             </div>
           )}

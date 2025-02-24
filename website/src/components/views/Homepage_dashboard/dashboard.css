@@ -141,18 +141,19 @@
 .time-info {
   display: flex;
   flex-direction: column;
+  padding: 3px;
 }
 
 .current-time {
-  font-size: 1.2rem;
+  font-size: 1.4rem;
   font-weight: bold;
-  color: #333;
+  color: #ffffff;
   margin: 0;
 }
 
 .current-date {
-  font-size: 0.9rem;
-  color: #666;
+  font-size: 1.1rem;
+  color: #ffffff;
   margin: 0;
 }
 
@@ -164,7 +165,7 @@
 }
 
 .metric-box {
-  background: #c2f2c2;
+  background-color: #c2f2c2e0;
   border-radius: 8px;
   padding: 15px;
   box-shadow: 0 7px 5px rgba(0, 0, 0, 0.52);

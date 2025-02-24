@@ -26,6 +26,9 @@ import io from 'socket.io-client';
 import Navigator from '../nav/navigator';
 import './dashboard.css';
 import backgroundbox1 from '../../assests/backgroundblock1.jpg';
+import night from '../../assests/night.jpg';
+import midday from '../../assests/midday.jpg';
+import evening from '../../assests/evening.png';
 
 
 ChartJS.register(
@@ -64,7 +67,7 @@ const Dashboard = () => {
       return <FaSun className="time-icon day" />; // Ban ngày
     } else if (hour >= 17 && hour < 19) {
       return <FaCloudSun className="time-icon sunset" />; // Hoàng hôn
-    } else {
+    } else if(hour >= 19 && hour < 5) {
       return <FaMoon className="time-icon night" />; // Ban đêm
     }
   };
@@ -73,24 +76,26 @@ const Dashboard = () => {
   const getGreeting = () => {
     const hour = currentTime.getHours();
     
-    if (hour >= 5 && hour < 12) {
+    if (hour >= 5 && hour < 10) {
       return "Good morning";
-    } else if (hour >= 12 && hour < 17) {
+    } else if (hour >= 10 && hour < 13) {
       return "Good afternoon";
-    } else if (hour >= 17 && hour < 22) {
+    } else if (hour >= 13 && hour < 17) {
       return "Good evening";
-    } else {
+    } else{
       return "Good night";
     }
   };
 
   const getBackgroundImage = (hour) => {
-    if (hour >= 5 && hour < 7) {
+    if (hour >= 5 && hour < 12) {
       return backgroundbox1;
-    } else if (hour >= 7 && hour < 17) {
-      return backgroundbox1;
+    } else if(hour >= 12 && hour < 17) {  
+      return midday;
+    } else if (hour >= 15 && hour < 19) {
+      return evening;
     } else {
-      return backgroundbox1;
+      return night;
     }
   };
 
@@ -304,7 +309,7 @@ const Dashboard = () => {
                   </div>
                 </div>
                 <div className="greeting-left">
-                  <h1>{getGreeting()} User!</h1>
+                  <h1>{getGreeting()} user !!</h1>
                   <h1>Wish you a nice day</h1>
                 </div>
               </div>
