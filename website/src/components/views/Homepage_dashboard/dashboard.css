@@ -5,7 +5,7 @@
 .dashboard-container {
   font-family: 'Roboto', sans-serif,'Ribeye Marrow', 'Playwrite IT Moderna';
   background-color: #ffffff;
-  min-height: 100vh;
+  min-height: 95vh;
   padding: 20px;
   display: flex;
   flex-direction: column;
@@ -39,11 +39,11 @@
 
 /* Định dạng chung cho các block */
 .metrics-block {
-    width: 90%;
+    width: 85%;
   }
   
   .notifications-block {
-    width: 30%;
+    width: 25%;
   }
   
   .graph-block {
@@ -145,16 +145,17 @@
 }
 
 .current-time {
-  font-size: 1.4rem;
+  font-size: 1.5rem;
   font-weight: bold;
   color: #ffffff;
   margin: 0;
 }
 
 .current-date {
-  font-size: 1.1rem;
+  font-size: 1.2rem;
   color: #ffffff;
   margin: 0;
+  font-family: 10px;
 }
 
 .metrics-grid {
