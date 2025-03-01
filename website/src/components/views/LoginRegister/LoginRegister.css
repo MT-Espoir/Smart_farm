@@ -1,0 +1,144 @@
+
+.login-register-page {
+    font-family: "Poppins", sans-serif;
+    display: flex;
+    width: 100%;
+    height:100%;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    min-width: 100vw;
+    background: url('../../assests/ricefiels.jpg')no-repeat;
+    background-size: cover;
+    background-position: center;
+  }
+  
+  .brand-icon {
+    position: absolute;
+    top: 5px;
+    right: 0px;
+    z-index: 10;
+    display: flex;
+    flex-direction: column; /* Chuyển sang cột, hiển thị img và h1 theo thứ tự */
+    align-items: center;    /* Căn giữa theo chiều ngang */
+    gap: 0px;               /* Khoảng cách giữa img và h1 (có thể điều chỉnh) */
+  }
+  
+  
+  .brand-icon img {
+    width: 170px;  /* Điều chỉnh kích thước logo theo ý */
+    height: auto;
+  }
+  
+  .brand-icon h1 {
+    font-size: 30px;
+    color: #fff;
+    text-align: center;
+    margin: 0; 
+  }
+  
+  .wrapper{
+    position: relative;
+    width: 450px;
+    height: 500px;
+    background: transparent;
+    border: 2px solid rgba(255,255,255,.1);
+    backdrop-filter: blur(30px);
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0,0,0,-2);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    overflow: hidden;
+    transition: height .2s ease;
+  }
+  
+  .wrapper .form-box {
+    width: 80%;
+    padding: 40px;
+  }
+  
+  .wrapper .form-box.login{
+    transition: translate .18s ease;
+    translate: 0;
+  } 
+  .wrapper.active .form-box.login {
+    transition: none;
+    translate: -600px;
+  }
+  
+  .wrapper .form-box.registration {
+    position: absolute;
+    transition: none;
+    translate: 600px;
+  }
+  
+  .wrapper.active .form-box.registration{
+    transition: translate .18s ease;
+    translate: 0;
+  }
+  form h1{
+    font-size: 50px;
+    text-align: center;
+    color: #000;
+    margin-bottom: 50px;
+    }
+  form .input-box{
+    position: relative;
+    width: 100%;
+    height: 50px;
+    margin: 30px 0;
+  
+  
+  }
+  
+  .input-box input {
+    width: 100%;
+    height: 100%;
+    background: transparent;
+    border: none;
+    outline: none;
+    border: 2px solid rgba(255 , 255, 255, .1);
+    border-radius: 40px;
+    font-size: 16px;
+    color: #ffff;
+    padding: 0px 15px 0px ;
+  }
+  .input-box input::placeholder {
+    color: #fff;
+  }
+  .input-box .icon {
+    position: absolute;
+    right: 0px;
+    top: 50%;
+    translate:0 -50%;
+    font-size:16px;
+  }
+  
+  form button {
+    width: 108%;
+    height: 45px;
+    background: #fff;
+    border: none;
+    outline: none;
+    border-radius: 40px;
+    box-shadow: 0 0 10px rgba(0,0,0,.1);
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: 700;
+    color: #364261;
+  }
+  form .register-link {
+    font-size: 14.5px;
+    text-align: center;
+    margin: 20px 0 15px;
+  }
+  
+  .register-link p a {
+    color: #fff;
+    text-decoration: none;
+    font-weight: 600;
+  }
+  .register-link p a:hover {
+    text-decoration: underline;
+  }
