@@ -5,6 +5,7 @@ import Dashboard from './components/views/Homepage_dashboard/dashboard';
 import LoginRegister from './components/views/LoginRegister/LoginRegister';
 import Healthcare from './components/views/Healthcare_page/healthcare';
 import Plant_page from './components/views/Plant_page/plant';
+import Devce_page from './components/views/Device_page/device';
 import './components/assests/css/output.css'; // Import Tailwind CSS
 import './App.css';
 
@@ -25,6 +26,7 @@ function AppContent() {
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/healthcare" element={<Healthcare />} />
           <Route path="/plant" element={<Plant_page />} />
+          <Route path="/device" element={<Devce_page />} />
         </Routes>
       </div>
     </div>

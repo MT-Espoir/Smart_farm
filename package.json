@@ -2,7 +2,13 @@
   "dependencies": {
     "@tailwindcss/cli": "^4.0.9",
     "@tailwindcss/vite": "^4.0.9",
+    "axios": "^1.8.1",
     "chart.js": "^4.4.7",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "mysql": "^2.18.1",
+    "mysql2": "^3.12.0",
     "react": "^19.0.0",
     "react-chartjs-2": "^5.3.0",
     "react-icons": "^5.5.0",
@@ -13,5 +19,15 @@
     "autoprefixer": "^10.4.20",
     "postcss": "^8.5.3",
     "tailwindcss": "^4.0.9"
-  }
+  },
+  "name": "smart_farm-main",
+  "version": "1.0.0",
+  "main": "tailwind.config.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": ""
 }
