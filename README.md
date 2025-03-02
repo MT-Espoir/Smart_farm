@@ -1,9 +1,9 @@
 1/ Chạy backend lấy db từ mysql: chạy lần lượt các lệnh sau
 - cd backend
 - npm install express           # Framework backend
-  npm install mysql2            # Kết nối MySQL
-  npm install dotenv            # Đọc file .env
-  npm install cors              # Xử lý CORS
+- npm install mysql2            # Kết nối MySQL
+- npm install dotenv            # Đọc file .env
+- npm install cors              # Xử lý CORS
 - node server.js
 
 2/ chuyển sang tailwind v3
