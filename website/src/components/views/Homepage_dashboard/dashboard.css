@@ -1,0 +1,280 @@
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap');
+@import url('https://fonts.googleapis.com/css?family=Ribeye+Marrow');
+@import url('https://fonts.googleapis.com/css2?family=Playwrite+IT+Moderna:wght@100..400&display=swap');
+/* Container chính của dashboard */
+.dashboard-container {
+  font-family: 'Roboto', sans-serif,'Ribeye Marrow', 'Playwrite IT Moderna';
+  background-color: #ffffff;
+  min-height: 95vh;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px; /* Khoảng cách giữa các hàng */
+}
+
+/* Hàng trên chứa block metrics và notifications */
+.top-row {
+  display: flex;
+  gap: 10px; /* Khoảng cách giữa 2 block trên hàng */
+  margin-bottom: 10px;
+}
+
+/* Hàng dưới chứa block Temperature Graph và Humidity Graph */
+.bottom-row {
+  display: flex;
+  gap: 10px;
+}
+
+/* Cho phép các block trong hàng co giãn (có thể điều chỉnh kích thước độc lập) */
+/* Thay đổi phần sắp xếp cho các block trong hàng trên và hàng dưới */
+.top-row > .block {
+    flex: 0 1 auto;  /* Không ép co giãn theo flex grow hay shrink */
+    /* Bạn có thể set width cố định nếu muốn, ví dụ: width: 600px; */
+  }
+  
+  .bottom-row > .block {
+    flex: 0 1 auto;  /* Tương tự, không ép co giãn */
+    /* Bạn có thể đặt width nếu cần, ví dụ: width: 300px; */
+  }
+
+/* Định dạng chung cho các block */
+.metrics-block {
+    width: 85%;
+  }
+  
+  .notifications-block {
+    width: 25%;
+  }
+  
+  .graph-block {
+    width: 50%;
+  }
+
+.block {
+  background-color: rgba(144, 238, 144, 0.208); /* nền xanh nhạt */
+  border-radius: 10px;
+  padding: 20px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+/* Block Metrics: Greeting & Metrics Grid */
+.metrics-block .metrics-layout {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.greeting {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;  /* Thay đổi từ center sang flex-start */
+  margin-bottom: 100px;
+  width: 100%;  /* Đảm bảo greeting chiếm toàn bộ chiều rộng */
+}
+
+.greeting-right {
+  order: 1;  /* Đặt phần time-display lên trên */
+  align-self: flex-start;  /* Thêm vào để đảm bảo nằm bên trái */
+}
+
+.greeting-left {
+  order: 2;  /* Đặt phần chào xuống dưới */
+  align-self: flex-start;  /* Thêm vào để đảm bảo nằm bên trái */
+  margin-left: 35px;  /* Thêm margin để tạo khoảng cách với lề */
+}
+
+.greeting-left h1 {
+  margin: 0;
+  text-align: left;  /* Thay đổi từ center sang left */
+  font-size: 2 rem;
+  font-weight: 500;
+  font-family: "Playwrite IT Moderna", serif;
+  color: #ffffff;
+  text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.5);
+}
+
+.time-display {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 35px;
+}
+
+.time-icon.sunrise {
+  color: #ff7e00;
+  font-size: 40px;
+  filter: drop-shadow(0 0 10px rgba(255, 126, 0, 0.5))
+         drop-shadow(1px 1px 0 #000)
+         drop-shadow(-1px -1px 0 #000)
+         drop-shadow(1px -1px 0 #000)
+         drop-shadow(-1px 1px 0 #000);
+}
+
+.time-icon.day {
+  color: #ffd700;
+  font-size: 40px;
+  filter: drop-shadow(0 0 10px rgba(255, 215, 0, 0.5))
+         drop-shadow(1px 1px 0 #000)
+         drop-shadow(-1px -1px 0 #000)
+}
+
+.time-icon.sunset {
+  color: #ff6b6b;
+  font-size: 40px;
+  filter: drop-shadow(0 0 10px rgba(255, 107, 107, 0.5))
+         drop-shadow(1px 1px 0 #000)
+         drop-shadow(-1px -1px 0 #000)
+         drop-shadow(1px -1px 0 #000)
+         drop-shadow(-1px 1px 0 #000);
+}
+
+.time-icon.night {
+  color: #4a90e2;
+  font-size: 40px;
+  filter: drop-shadow(0 0 10px rgba(74, 144, 226, 0.5))
+         drop-shadow(1px 1px 0 #000)
+         drop-shadow(-1px -1px 0 #000)
+         drop-shadow(1px -1px 0 #000)
+         drop-shadow(-1px 1px 0 #000);
+}
+
+.time-info {
+  display: flex;
+  flex-direction: column;
+  padding: 3px;
+}
+
+.current-time {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #ffffff;
+  margin: 0;
+}
+
+.current-date {
+  font-size: 1.2rem;
+  color: #ffffff;
+  margin: 0;
+  font-family: 10px;
+}
+
+.metrics-grid {
+  flex: 1;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+}
+
+.metric-box {
+  background-color: #c2f2c2e0;
+  border-radius: 8px;
+  padding: 15px;
+  box-shadow: 0 7px 5px rgba(0, 0, 0, 0.52);
+  height: 80px;
+  width: 200px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  position: relative;
+}
+
+/* Icon và chữ nằm ngang */
+.metric-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Icon */
+.metric-icon {
+  font-size: 24px;
+  color: #1a4601;
+}
+
+/* Chữ (Temperature, Humidity, ...) */
+.metric-label {
+  font-size: 20px;
+  font-weight: 500;
+  color: #333;
+}
+
+/* Giá trị số nằm góc dưới bên phải */
+.metric-value {
+  font-size: 20px;
+  font-weight: bold;
+  color: #333;
+  position: absolute;
+  bottom: 5px;
+  right: 10px;
+}
+
+/* Block Notifications */
+.notifications-block .notification-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 15px;
+}
+
+.bell-icon {
+  font-size: 24px;
+  color: #4CAF50;
+}
+
+.notification-list p {
+  margin: 10px 0;
+  color: #333;
+}
+
+/* Typography */
+h1 {
+  font-size: 1.8rem;
+  font-weight: 500;
+  color: #333;
+}
+
+h2 {
+  font-size: 1.4rem;
+  font-weight: 500;
+  color: #333;
+  margin: 0 0 15px 0;
+}
+
+h3 {
+  font-size: 1.2rem;
+  font-weight: 500;
+  color: #333;
+  margin: 10px 0;
+}
+
+/* Responsive Design: điều chỉnh hiển thị khi kích thước màn hình nhỏ */
+@media (max-width: 768px) {
+  .dashboard-container {
+    flex-direction: column;
+  }
+  .top-row,
+  .bottom-row {
+    flex-direction: column;
+  }
+}
+.graph-block {
+  height: 380px;
+  padding: 20px;
+}
+
+canvas {
+  width: 90% !important;
+  height: 90% !important;
+}
+
+.notification-list {
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+/* Responsive cho mobile */
+@media (max-width: 768px) {
+  .graph-block {
+    height: 300px;
+  }
+}
