@@ -1,12 +1,25 @@
 // import React, { useEffect, useState } from "react";
 // import axios from "axios";
-// import '../../assests/css/output.css'; // Import Tailwind CSS
+// // import '../../assests/css/output.css'; // Import Tailwind CSS
 
 // const statusColors = {
+//   "Chưa trồng": "bg-yellow-100 text-yellow-600",
 //   "Đang trồng": "bg-blue-100 text-blue-600",
-//   "Thu hoạch": "bg-green-100 text-green-600",
 //   "Quá hạn": "bg-red-100 text-red-600",
+//   "Thu hoạch": "bg-green-100 text-green-600",
 // };
+
+// function getStatus(startDate, endDate) {
+//   const today = new Date();
+//   const start = new Date(startDate.split('-').reverse().join('-'));
+//   const end = new Date(endDate.split('-').reverse().join('-'));
+
+//   if (today < start) return "Chưa trồng";
+//   if (today >= start && today < end) return "Đang trồng";
+//   if (today >= end) return "Thu hoạch";
+//   // if (today === end) return "Thu hoạch";
+//   return "Không xác định";
+// }
 
 // function PlantPage() {
 //   const [plants, setPlants] = useState([]);
@@ -35,6 +48,14 @@
 //       .catch((error) => console.error("Lỗi khi thêm cây trồng:", error));
 //   };
 
+//   const handleDeletePlant = (id) => {
+//     axios.delete(`http://localhost:5000/plants/${id}`)
+//       .then(() => {
+//         fetchPlants();
+//       })
+//       .catch((error) => console.error("Lỗi khi xóa cây trồng:", error));
+//   };
+
 //   const totalPages = Math.ceil(plants.length / itemsPerPage);
 //   const displayedPlants = plants.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
@@ -48,28 +69,37 @@
 
 //       <div className="overflow-x-auto">
 //         <table className="overflow-hidden w-full border border-gray-200 rounded-lg shadow-md">
-//           <thead className="bg-[#E8FFE8] text-gray-700 rounded-t-lg">
+//           <thead className="bg-mint text-gray-700 rounded-t-lg">
 //             <tr>
 //               <th className="py-3 px-4 text-left">Plant ID</th>
 //               <th className="py-3 px-4 text-left">Tên cây</th>
 //               <th className="py-3 px-4 text-left">Ngày trồng</th>
 //               <th className="py-3 px-4 text-left">Ngày thu hoạch</th>
+//               <th className="py-3 px-4 text-left">Trạng thái</th>
 //               <th className="py-3 px-4 text-left">Thao tác</th>
 //             </tr>
 //           </thead>
 //           <tbody>
-//             {displayedPlants.map((plant) => (
-//               <tr key={plant.id} className="border-b border-gray-200">
-//                 <td className="py-3 px-4">{plant.id}</td>
-//                 <td className="py-3 px-4">{plant.plant_name}</td>
-//                 <td className="py-3 px-4">{plant.start_date}</td>
-//                 <td className="py-3 px-4">{plant.end_date}</td>
-//                 <td className="py-3 px-4 space-x-2">
-//                   <button className="px-3 py-1 bg-gray-200 text-gray-800 rounded-md">Chi tiết</button>
-//                   <button className="px-3 py-1 bg-red-100 text-red-600 rounded-md">Xóa</button>
-//                 </td>
-//               </tr>
-//             ))}
+//             {displayedPlants.map((plant) => {
+//               const status = getStatus(plant.start_date, plant.end_date);
+//               return (
+//                 <tr key={plant.id} className="border-b border-gray-200">
+//                   <td className="py-3 px-4">{plant.id}</td>
+//                   <td className="py-3 px-4">{plant.plant_name}</td>
+//                   <td className="py-3 px-4">{plant.start_date}</td>
+//                   <td className="py-3 px-4">{plant.end_date}</td>
+//                   <td className="py-3 px-4">
+//                     <span className={`px-3 py-1 rounded-md text-sm font-medium ${statusColors[status] || "bg-gray-200 text-gray-600"}`}>
+//                       {status}
+//                     </span>
+//                   </td>
+//                   <td className="py-3 px-4 space-x-2">
+//                     <button className="px-3 py-1 bg-gray-200 text-gray-800 rounded-md" onClick={() => isDetailModalOpen(true)}>Chi tiết</button>
+//                     <button className="px-3 py-1 bg-red-100 text-red-600 rounded-md" onClick={() => handleDeletePlant(plant.id)}>Xóa</button>
+//                   </td>
+//                 </tr>
+//               );
+//             })}
 //           </tbody>
 //         </table>
 //       </div>
@@ -91,8 +121,8 @@
 //             <input type="date" placeholder="Ngày trồng" className="w-full border p-2 rounded mb-2" value={newPlant.start_date} onChange={(e) => setNewPlant({ ...newPlant, start_date: e.target.value })} />
 //             <input type="date" placeholder="Ngày thu hoạch" className="w-full border p-2 rounded mb-4" value={newPlant.end_date} onChange={(e) => setNewPlant({ ...newPlant, end_date: e.target.value })} />
 //             <div className="flex justify-end space-x-2">
-//               <button className="bg-gray-300 px-4 py-2 rounded" onClick={() => setIsModalOpen(false)}>Hủy</button>
-//               <button className="bg-green-300 text-black px-4 py-2 rounded" onClick={handleAddPlant}>Thêm</button>
+//               <button className="bg-white px-4 py-2 rounded border" onClick={() => setIsModalOpen(false)}>Hủy</button>
+//               <button className="bg-mint text-black px-4 py-2 rounded" onClick={handleAddPlant}>Thêm</button>
 //             </div>
 //           </div>
 //         </div>
@@ -123,7 +153,7 @@ function getStatus(startDate, endDate) {
   if (today < start) return "Chưa trồng";
   if (today >= start && today < end) return "Đang trồng";
   if (today >= end) return "Thu hoạch";
-  // if (today == end) return "Thu hoạch";
+  // if (today === end) return "Thu hoạch";
   return "Không xác định";
 }
 
@@ -132,6 +162,8 @@ function PlantPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [newPlant, setNewPlant] = useState({ plant_name: "", start_date: "", end_date: "" });
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+  const [currentPlant, setCurrentPlant] = useState(null);
   const itemsPerPage = 5;
 
   useEffect(() => {
@@ -162,6 +194,16 @@ function PlantPage() {
       .catch((error) => console.error("Lỗi khi xóa cây trồng:", error));
   };
 
+  const handleOpenDetailModal = (plant) => {
+    setCurrentPlant(plant);
+    setIsDetailModalOpen(true);
+  };
+
+  const handleCloseDetailModal = () => {
+    setIsDetailModalOpen(false);
+    setCurrentPlant(null);
+  };
+
   const totalPages = Math.ceil(plants.length / itemsPerPage);
   const displayedPlants = plants.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
@@ -175,7 +217,7 @@ function PlantPage() {
 
       <div className="overflow-x-auto">
         <table className="overflow-hidden w-full border border-gray-200 rounded-lg shadow-md">
-          <thead className="bg-[#E8FFE8] text-gray-700 rounded-t-lg">
+          <thead className="bg-mint text-gray-700 rounded-t-lg">
             <tr>
               <th className="py-3 px-4 text-left">Plant ID</th>
               <th className="py-3 px-4 text-left">Tên cây</th>
@@ -200,7 +242,7 @@ function PlantPage() {
                     </span>
                   </td>
                   <td className="py-3 px-4 space-x-2">
-                    <button className="px-3 py-1 bg-gray-200 text-gray-800 rounded-md">Chi tiết</button>
+                    <button className="px-3 py-1 bg-gray-200 text-gray-800 rounded-md" onClick={() => handleOpenDetailModal(plant)}>Chi tiết</button>
                     <button className="px-3 py-1 bg-red-100 text-red-600 rounded-md" onClick={() => handleDeletePlant(plant.id)}>Xóa</button>
                   </td>
                 </tr>
@@ -227,8 +269,22 @@ function PlantPage() {
             <input type="date" placeholder="Ngày trồng" className="w-full border p-2 rounded mb-2" value={newPlant.start_date} onChange={(e) => setNewPlant({ ...newPlant, start_date: e.target.value })} />
             <input type="date" placeholder="Ngày thu hoạch" className="w-full border p-2 rounded mb-4" value={newPlant.end_date} onChange={(e) => setNewPlant({ ...newPlant, end_date: e.target.value })} />
             <div className="flex justify-end space-x-2">
-              <button className="bg-gray-300 px-4 py-2 rounded" onClick={() => setIsModalOpen(false)}>Hủy</button>
-              <button className="bg-green-300 text-black px-4 py-2 rounded" onClick={handleAddPlant}>Thêm</button>
+              <button className="bg-white px-4 py-2 rounded border" onClick={() => setIsModalOpen(false)}>Hủy</button>
+              <button className="bg-mint text-black px-4 py-2 rounded" onClick={handleAddPlant}>Thêm</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {isDetailModalOpen && currentPlant && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="bg-white p-6 rounded-lg shadow-lg w-96">
+            <h2 className="text-lg font-bold mb-4">Chi tiết cây trồng</h2>
+            <p><strong>Tên cây:</strong> {currentPlant.plant_name}</p>
+            <p><strong>Ngày trồng:</strong> {currentPlant.start_date}</p>
+            <p><strong>Ngày thu hoạch:</strong> {currentPlant.end_date}</p>
+            <div className="flex justify-end space-x-2 mt-4">
+              <button className="bg-white px-4 py-2 rounded border" onClick={handleCloseDetailModal}>Đóng</button>
             </div>
           </div>
         </div>
