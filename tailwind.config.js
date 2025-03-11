@@ -9,7 +9,8 @@ module.exports = {
         Roboto: ['Roboto', 'sans-serif']
       },
       colors: {
-        mint: "#E8FFE8"
+        mint: "#E8FFE8",
+        dark_green: "#136A19"
       }
     },
   },

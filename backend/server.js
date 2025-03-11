@@ -134,7 +134,7 @@ app.delete("/api/devices/:id", (req, res) => {
 });
 
 // Chạy server
-const PORT = 5000;
+const PORT = 5001;
 app.listen(PORT, () => {
   console.log(`Server chạy tại http://localhost:${PORT}`);
 });

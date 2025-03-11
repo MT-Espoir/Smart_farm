@@ -20,7 +20,7 @@ import {
   FaSun, // icon mặt trời (buổi trưa)
   FaMoon, // icon trăng (buổi tối)
   FaCloudSun, // icon mặt trời và mây (bình minh/hoàng hôn)
-  FaClock 
+  FaClock
 } from 'react-icons/fa';
 import io from 'socket.io-client';
 import Navigator from '../nav/navigator';
@@ -60,14 +60,14 @@ const Dashboard = () => {
 
   const getTimeIcon = () => {
     const hour = currentTime.getHours();
-    
+
     if (hour >= 5 && hour < 7) {
       return <FaCloudSun className="time-icon sunrise" />; // Bình minh
     } else if (hour >= 7 && hour < 17) {
       return <FaSun className="time-icon day" />; // Ban ngày
     } else if (hour >= 17 && hour < 19) {
       return <FaCloudSun className="time-icon sunset" />; // Hoàng hôn
-    } else if(hour >= 19 && hour < 5) {
+    } else if (hour >= 19 && hour < 5) {
       return <FaMoon className="time-icon night" />; // Ban đêm
     }
   };
@@ -75,14 +75,14 @@ const Dashboard = () => {
   // Hàm xác định lời chào theo thời gian
   const getGreeting = () => {
     const hour = currentTime.getHours();
-    
+
     if (hour >= 5 && hour < 10) {
       return "Good morning";
     } else if (hour >= 10 && hour < 13) {
       return "Good afternoon";
     } else if (hour >= 13 && hour < 17) {
       return "Good evening";
-    } else{
+    } else {
       return "Good night";
     }
   };
@@ -90,7 +90,7 @@ const Dashboard = () => {
   const getBackgroundImage = (hour) => {
     if (hour >= 5 && hour < 12) {
       return backgroundbox1;
-    } else if(hour >= 12 && hour < 17) {  
+    } else if (hour >= 12 && hour < 17) {
       return midday;
     } else if (hour >= 15 && hour < 19) {
       return evening;
@@ -133,7 +133,7 @@ const Dashboard = () => {
     const interval = setInterval(fetchData, 5000);
     return () => clearInterval(interval);
   }, []);
-  
+
   // Cấu hình cho biểu đồ nhiệt độ và độ ẩm
   const tempHumidityOptions = {
     plugins: {
@@ -155,7 +155,7 @@ const Dashboard = () => {
         caretPadding: 2,
         displayColors: true,
         callbacks: {
-          label: function(context) {
+          label: function (context) {
             let label = context.dataset.label || '';
             if (label) {
               label += ': ';
@@ -196,31 +196,31 @@ const Dashboard = () => {
   // Cấu hình cho biểu đồ độ ẩm đất
   const soilMoistureOptions = {
     responsive: true,
-  plugins: {
-    legend: {
-      position: 'top',
-    },
-    title: {
-      display: true,
-      text: 'Soil Moisture Over Time',
-    },
-    tooltip: {
-      mode: 'index',
-      intersect: false,
-      position: 'nearest',
-      backgroundColor: 'rgba(0, 0, 0, 0.8)',
-      padding: 10,
-      cornerRadius: 4,
-      caretSize: 6,
-      caretPadding: 2,
-      displayColors: true,
-      callbacks: {
-        label: function(context) {
-          return `Soil Moisture: ${context.parsed.y.toFixed(2)}%`;
+    plugins: {
+      legend: {
+        position: 'top',
+      },
+      title: {
+        display: true,
+        text: 'Soil Moisture Over Time',
+      },
+      tooltip: {
+        mode: 'index',
+        intersect: false,
+        position: 'nearest',
+        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+        padding: 10,
+        cornerRadius: 4,
+        caretSize: 6,
+        caretPadding: 2,
+        displayColors: true,
+        callbacks: {
+          label: function (context) {
+            return `Soil Moisture: ${context.parsed.y.toFixed(2)}%`;
+          }
         }
       }
-    }
-  },
+    },
     scales: {
       y: {
         beginAtZero: true,
@@ -267,21 +267,21 @@ const Dashboard = () => {
 
   // Format thời gian
   const formatTime = (date) => {
-    return date.toLocaleTimeString('en-US', { 
-      hour: '2-digit', 
+    return date.toLocaleTimeString('en-US', {
+      hour: '2-digit',
       minute: '2-digit',
       second: '2-digit',
-      hour12: false 
+      hour12: false
     });
   };
 
   // Format ngày tháng
   const formatDate = (date) => {
-    return date.toLocaleDateString('en-US', { 
+    return date.toLocaleDateString('en-US', {
       weekday: 'long',
-      year: 'numeric', 
-      month: 'long', 
-      day: 'numeric' 
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
     });
   };
 
@@ -316,23 +316,42 @@ const Dashboard = () => {
               <div className="metrics-grid">
                 <div className="metric-box">
                   <FaTemperatureHigh className="metric-icon" />
-                  <h3 className="metric-label">Temperature</h3>
+                  <h3 className="metric-label">Temp</h3>
                   <p className="metric-value">{sensorData.temperature}°C</p>
+                  <div className='toggle_button'>
+                    <label class="inline-flex items-center cursor-pointer">
+                      <input type="checkbox" value="" class="sr-only peer"></input>
+                      <div class="relative w-9 h-5 bg-gray-200 peer-focus:outline-none peer-focus:ring-1 peer-focus:ring-dark_green dark:peer-focus:ring-dark_green rounded-full peer dark:bg-gray-600 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:border-gray-500 peer-checked:bg-dark_green dark:peer-checked:bg-mint-600"></div>
+                    </label>
+                  </div>
                 </div>
+
                 <div className="metric-box">
                   <FaTint className="metric-icon" />
-                  <h3 className="metric-label">Humidity</h3>
+                  <h3 className="metric-label">Humid</h3>
                   <p className="metric-value">{sensorData.humidity}%</p>
                 </div>
                 <div className="metric-box">
                   <FaLightbulb className="metric-icon" />
                   <h3 className="metric-label">Lux</h3>
                   <p className="metric-value">{sensorData.lux} lx</p>
+                  <div className='toggle_button'>
+                    <label class="inline-flex items-center cursor-pointer">
+                      <input type="checkbox" value="" class="sr-only peer"></input>
+                      <div class="relative w-9 h-5 bg-gray-200 peer-focus:outline-none peer-focus:ring-1 peer-focus:ring-dark_green dark:peer-focus:ring-dark_green rounded-full peer dark:bg-gray-600 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:border-gray-500 peer-checked:bg-dark_green dark:peer-checked:bg-mint-600"></div>
+                    </label>
+                  </div>
                 </div>
                 <div className="metric-box">
                   <FaWater className="metric-icon" />
-                  <h3 className="metric-label">Soil Moisture</h3>
+                  <h3 className="metric-label">Moisture</h3>
                   <p className="metric-value">{sensorData.soil_moisture}%</p>
+                  <div className='toggle_button'>
+                    <label class="inline-flex items-center cursor-pointer">
+                      <input type="checkbox" value="" class="sr-only peer"></input>
+                      <div class="relative w-9 h-5 bg-gray-200 peer-focus:outline-none peer-focus:ring-1 peer-focus:ring-dark_green dark:peer-focus:ring-dark_green rounded-full peer dark:bg-gray-600 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:border-gray-500 peer-checked:bg-dark_green dark:peer-checked:bg-mint-600"></div>
+                    </label>
+                  </div>
                 </div>
               </div>
             </div>

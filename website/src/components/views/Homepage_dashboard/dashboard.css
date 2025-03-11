@@ -1,9 +1,9 @@
-@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap');
-@import url('https://fonts.googleapis.com/css?family=Ribeye+Marrow');
-@import url('https://fonts.googleapis.com/css2?family=Playwrite+IT+Moderna:wght@100..400&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap");
+@import url("https://fonts.googleapis.com/css?family=Ribeye+Marrow");
+@import url("https://fonts.googleapis.com/css2?family=Playwrite+IT+Moderna:wght@100..400&display=swap");
 /* Container chính của dashboard */
 .dashboard-container {
-  font-family: 'Roboto', sans-serif,'Ribeye Marrow', 'Playwrite IT Moderna';
+  font-family: "Roboto", sans-serif, "Ribeye Marrow", "Playwrite IT Moderna";
   background-color: #ffffff;
   min-height: 95vh;
   padding: 20px;
@@ -28,33 +28,33 @@
 /* Cho phép các block trong hàng co giãn (có thể điều chỉnh kích thước độc lập) */
 /* Thay đổi phần sắp xếp cho các block trong hàng trên và hàng dưới */
 .top-row > .block {
-    flex: 0 1 auto;  /* Không ép co giãn theo flex grow hay shrink */
-    /* Bạn có thể set width cố định nếu muốn, ví dụ: width: 600px; */
-  }
-  
-  .bottom-row > .block {
-    flex: 0 1 auto;  /* Tương tự, không ép co giãn */
-    /* Bạn có thể đặt width nếu cần, ví dụ: width: 300px; */
-  }
+  flex: 0 1 auto; /* Không ép co giãn theo flex grow hay shrink */
+  /* Bạn có thể set width cố định nếu muốn, ví dụ: width: 600px; */
+}
+
+.bottom-row > .block {
+  flex: 0 1 auto; /* Tương tự, không ép co giãn */
+  /* Bạn có thể đặt width nếu cần, ví dụ: width: 300px; */
+}
 
 /* Định dạng chung cho các block */
 .metrics-block {
-    width: 85%;
-  }
-  
-  .notifications-block {
-    width: 25%;
-  }
-  
-  .graph-block {
-    width: 50%;
-  }
+  width: 85%;
+}
+
+.notifications-block {
+  width: 25%;
+}
+
+.graph-block {
+  width: 50%;
+}
 
 .block {
   background-color: rgba(144, 238, 144, 0.208); /* nền xanh nhạt */
   border-radius: 10px;
   padding: 20px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 /* Block Metrics: Greeting & Metrics Grid */
@@ -67,25 +67,25 @@
 .greeting {
   display: flex;
   flex-direction: column;
-  align-items: flex-start;  /* Thay đổi từ center sang flex-start */
+  align-items: flex-start; /* Thay đổi từ center sang flex-start */
   margin-bottom: 100px;
-  width: 100%;  /* Đảm bảo greeting chiếm toàn bộ chiều rộng */
+  width: 100%; /* Đảm bảo greeting chiếm toàn bộ chiều rộng */
 }
 
 .greeting-right {
-  order: 1;  /* Đặt phần time-display lên trên */
-  align-self: flex-start;  /* Thêm vào để đảm bảo nằm bên trái */
+  order: 1; /* Đặt phần time-display lên trên */
+  align-self: flex-start; /* Thêm vào để đảm bảo nằm bên trái */
 }
 
 .greeting-left {
-  order: 2;  /* Đặt phần chào xuống dưới */
-  align-self: flex-start;  /* Thêm vào để đảm bảo nằm bên trái */
-  margin-left: 35px;  /* Thêm margin để tạo khoảng cách với lề */
+  order: 2; /* Đặt phần chào xuống dưới */
+  align-self: flex-start; /* Thêm vào để đảm bảo nằm bên trái */
+  margin-left: 35px; /* Thêm margin để tạo khoảng cách với lề */
 }
 
 .greeting-left h1 {
   margin: 0;
-  text-align: left;  /* Thay đổi từ center sang left */
+  text-align: left; /* Thay đổi từ center sang left */
   font-size: 2 rem;
   font-weight: 500;
   font-family: "Playwrite IT Moderna", serif;
@@ -104,38 +104,31 @@
   color: #ff7e00;
   font-size: 40px;
   filter: drop-shadow(0 0 10px rgba(255, 126, 0, 0.5))
-         drop-shadow(1px 1px 0 #000)
-         drop-shadow(-1px -1px 0 #000)
-         drop-shadow(1px -1px 0 #000)
-         drop-shadow(-1px 1px 0 #000);
+    drop-shadow(1px 1px 0 #000) drop-shadow(-1px -1px 0 #000)
+    drop-shadow(1px -1px 0 #000) drop-shadow(-1px 1px 0 #000);
 }
 
 .time-icon.day {
   color: #ffd700;
   font-size: 40px;
   filter: drop-shadow(0 0 10px rgba(255, 215, 0, 0.5))
-         drop-shadow(1px 1px 0 #000)
-         drop-shadow(-1px -1px 0 #000)
+    drop-shadow(1px 1px 0 #000) drop-shadow(-1px -1px 0 #000);
 }
 
 .time-icon.sunset {
   color: #ff6b6b;
   font-size: 40px;
   filter: drop-shadow(0 0 10px rgba(255, 107, 107, 0.5))
-         drop-shadow(1px 1px 0 #000)
-         drop-shadow(-1px -1px 0 #000)
-         drop-shadow(1px -1px 0 #000)
-         drop-shadow(-1px 1px 0 #000);
+    drop-shadow(1px 1px 0 #000) drop-shadow(-1px -1px 0 #000)
+    drop-shadow(1px -1px 0 #000) drop-shadow(-1px 1px 0 #000);
 }
 
 .time-icon.night {
   color: #4a90e2;
   font-size: 40px;
   filter: drop-shadow(0 0 10px rgba(74, 144, 226, 0.5))
-         drop-shadow(1px 1px 0 #000)
-         drop-shadow(-1px -1px 0 #000)
-         drop-shadow(1px -1px 0 #000)
-         drop-shadow(-1px 1px 0 #000);
+    drop-shadow(1px 1px 0 #000) drop-shadow(-1px -1px 0 #000)
+    drop-shadow(1px -1px 0 #000) drop-shadow(-1px 1px 0 #000);
 }
 
 .time-info {
@@ -193,9 +186,11 @@
 
 /* Chữ (Temperature, Humidity, ...) */
 .metric-label {
+  position: absolute;
   font-size: 20px;
   font-weight: 500;
   color: #333;
+  bottom: 8px;
 }
 
 /* Giá trị số nằm góc dưới bên phải */
@@ -204,7 +199,7 @@
   font-weight: bold;
   color: #333;
   position: absolute;
-  bottom: 5px;
+  bottom: 45px;
   right: 10px;
 }
 
@@ -218,7 +213,7 @@
 
 .bell-icon {
   font-size: 24px;
-  color: #4CAF50;
+  color: #4caf50;
 }
 
 .notification-list p {
@@ -277,4 +272,10 @@ canvas {
   .graph-block {
     height: 300px;
   }
+}
+
+.toggle_button {
+  position: absolute;
+  bottom: 5px;
+  right: 9px;
 }

@@ -12,7 +12,7 @@ export default function Device() {
 
   const fetchDevices = async () => {
     try {
-      const res = await axios.get("http://localhost:5000/api/devices");
+      const res = await axios.get("http://localhost:5001/api/devices");
       setDevices(res.data);
     } catch (error) {
       console.error("Lỗi khi lấy dữ liệu thiết bị:", error);
@@ -26,7 +26,7 @@ export default function Device() {
     }
 
     try {
-      await axios.post("http://localhost:5000/api/devices", {
+      await axios.post("http://localhost:5001/api/devices", {
         ...newDevice,
         state: newDevice.state || "active", // Đảm bảo state không null
       });
@@ -40,7 +40,7 @@ export default function Device() {
 
   const handleDeleteDevice = async (id) => {
     try {
-      await axios.delete(`http://localhost:5000/api/devices/${id}`);
+      await axios.delete(`http://localhost:5001/api/devices/${id}`);
       fetchDevices();
     } catch (error) {
       console.error("Lỗi khi xóa thiết bị:", error);
@@ -67,7 +67,7 @@ export default function Device() {
 
       <div className="overflow-x-auto">
         <table className="w-full border border-gray-200 rounded-lg shadow-md">
-          <thead className="bg-green-100 text-gray-700">
+          <thead className="bg-mint text-gray-700">
             <tr>
               <th className="py-3 px-4 text-left">Device ID</th>
               <th className="py-3 px-4 text-left">Tên thiết bị</th>
@@ -79,7 +79,7 @@ export default function Device() {
             {devices.map((device) => (
               <tr key={device.id} className="border-b border-gray-200">
                 <td className="py-3 px-4">{device.id}</td>
-                <td className="py-3 px-4 font-bold">{device.device_name}</td>
+                <td className="py-3 px-4">{device.device_name}</td>
                 <td className="py-3 px-4">
                   <span className={getStatusStyle(device.state)}>{device.state}</span>
                 </td>
