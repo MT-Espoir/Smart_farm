@@ -1,5 +1,6 @@
 import React from "react";
 import { useState, useEffect } from "react";
+import FetchData from "./fechdata";
 import { Line } from 'react-chartjs-2';
 import {
   Chart as ChartJS,
@@ -132,91 +133,24 @@ function AnalystPage() {
       };
 
 
-    // Thêm state cho dữ liệu bảng
-  const [tableData, setTableData] = useState([]);
-
-  useEffect(() => {
-    const fetchCSVData = async () => {
-      try {
-        const response = await fetch('/Data/sensor_data.csv');
-        const csvText = await response.text();
-        const rows = csvText.split('\n')
-          .filter(row => row.trim()) // Lọc bỏ dòng trống
-          .map(row => {
-            const [timestamp, temperature, humidity, soil_moisture, lux, pump_status] = row.split(',');
-            return {
-              timestamp: new Date(timestamp).toLocaleString(),
-              temperature: parseFloat(temperature),
-              humidity: parseFloat(humidity),
-              soil_moisture: parseInt(soil_moisture),
-              lux: parseInt(lux),
-              pump_status: parseInt(pump_status)
-            };
-          });
-        
-        // Lấy 6 bản ghi mới nhất
-        setTableData(rows.slice(-6));
-      } catch (error) {
-        console.error('Error loading CSV data:', error);
-      }
-    };
-
-    fetchCSVData();
-    const interval = setInterval(fetchCSVData, 5000); // Cập nhật mỗi 5 giây
-    return () => clearInterval(interval);
-  }, []);  
-
-  // Thêm JSX cho bảng
-  const renderTable = () => (
-    <div className="overflow-x-auto mt-4">
-      <table className="min-w-full bg-white rounded-lg overflow-hidden shadow">
-        <thead className="bg-gray-100">
-          <tr>
-            <th className="px-4 py-2">Thời gian</th>
-            <th className="px-4 py-2">Nhiệt độ (°C)</th>
-            <th className="px-4 py-2">Độ ẩm (%)</th>
-            <th className="px-4 py-2">Độ ẩm đất (%)</th>
-            <th className="px-4 py-2">Ánh sáng (lux)</th>
-            <th className="px-4 py-2">Trạng thái bơm</th>
-          </tr>
-        </thead>
-        <tbody>
-          {tableData.map((row, index) => (
-            <tr key={index} className={index % 2 === 0 ? 'bg-gray-50' : 'bg-white'}>
-              <td className="px-4 py-2">{row.timestamp}</td>
-              <td className="px-4 py-2">{row.temperature.toFixed(2)}</td>
-              <td className="px-4 py-2">{row.humidity.toFixed(2)}</td>
-              <td className="px-4 py-2">{row.soil_moisture}</td>
-              <td className="px-4 py-2">{row.lux}</td>
-              <td className="px-4 py-2">
-                <span className={`px-2 py-1 rounded-full text-sm ${
-                  row.pump_status ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                }`}>
-                  {row.pump_status ? 'Bật' : 'Tắt'}
-                </span>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  );
 
     return (
         <>
             <div className="p-8">
             <div className="bottom-row">
                 <div className="block graph-block">
-                    <h2>Temperature & Humidity Graph</h2>
+                    <h2 className="font-bold">Temperature & Humidity Graph</h2>
                     <Line options={tempHumidityOptions} data={tempHumidityData} />
                 </div>
                 <div className="block graph-block">
-                    <h2>Soil Moisture Graph</h2>
+                    <h2 className="font-bold">Soil Moisture Graph</h2>
                     <Line options={soilMoistureOptions} data={soilMoistureData} />
                     {/* Thêm component cho độ ẩm đất nếu cần */}
                 </div>
             </div>
-            {renderTable()}
+            <div>
+                <FetchData />
+            </div>
             </div>
         </>
     );
