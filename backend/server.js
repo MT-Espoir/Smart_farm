@@ -224,7 +224,7 @@ async function processMessage(message, userId) {
     }
   }
   
-  if (message.includes("cây trồng") || message.includes("thu hoạch")) {
+  if (message.includes("cây trồng") && message.includes("thu hoạch")) {
     const plants = await new Promise((resolve, reject) => {
       db.query(
         "SELECT plant_name, end_date FROM plant",
@@ -236,8 +236,8 @@ async function processMessage(message, userId) {
     });
     
     if (plants.length > 0) {
-      const plantInfo = plants.map(p => `${p.plant_name} (dự kiến thu hoạch: ${p.end_date})`).join(", ");
-      return `Các loại cây đang trồng: ${plantInfo}`;
+      const plantInfo = plants.map(p => `- ${p.plant_name} (thu hoạch: ${p.end_date})`).join('\n');
+      return `Các loại cây đang trồng:\n${plantInfo}`;
     }
     return "Hiện chưa có thông tin về cây trồng.";
   }

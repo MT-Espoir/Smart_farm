@@ -186,6 +186,7 @@ def get_images():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+
 # def run_sensor_data():
 #     os.system('python sensor_data.py')
 

@@ -104,7 +104,7 @@ const Chatbot = () => {
 
     try {
       // Gửi tin nhắn đến server
-      const response = await axios.post("http://localhost:5000/api/chat", {
+      const response = await axios.post("http://localhost:5001/api/chat", {
         message: message,
         userId: userId
       });
