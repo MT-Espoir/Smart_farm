@@ -7,6 +7,7 @@ import Healthcare from './components/views/Healthcare_page/healthcare';
 import Plant_page from './components/views/Plant_page/plant';
 import Devce_page from './components/views/Device_page/device';
 import AnalystPage from './components/views/Analyst_page/analyst';
+import Chatbot from './components/views/Chatbot/chatbot';
 import './components/assests/css/output.css'; // Import Tailwind CSS
 import './App.css';
 
@@ -19,6 +20,7 @@ function AppContent() {
       {!isLoginPage && (
         <div className="navigator-container">
           <Navigator />
+          <Chatbot />
         </div>
       )}
       <div className={isLoginPage ? "content full-content" : "content"}>

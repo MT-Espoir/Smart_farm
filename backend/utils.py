@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 import numpy as np
 from keras._tf_keras.keras.preprocessing.image import load_img, img_to_array
 
-DATA_FILE = "Data/sensor_data.csv"
+DATA_FILE = "backend/Data/sensor_data.csv"
 
 
 def get_latest_data():

@@ -12,7 +12,7 @@ const db = mysql.createConnection({
   host: "localhost",
   user: "root",
   password: "",  // Đổi thành mật khẩu MySQL của bạn
-  database: "smartfarm_db"
+  database: "smartfarm"
 });
 
 db.connect((err) => {
@@ -132,6 +132,137 @@ app.delete("/api/devices/:id", (req, res) => {
     }
   );
 });
+
+app.post("/api/chat", (req, res) => {
+  const { message, userId } = req.body;
+  
+  // Lưu tin nhắn vào database
+  db.query(
+    "INSERT INTO chat_messages (user_id, message, is_bot) VALUES (?, ?, 0)",
+    [userId, message],
+    (err, result) => {
+      if (err) {
+        res.status(500).send(err);
+        return;
+      }
+      
+      // Xử lý câu trả lời cho chatbot
+      processMessage(message, userId)
+        .then(botResponse => {
+          // Lưu câu trả lời của bot
+          db.query(
+            "INSERT INTO chat_messages (user_id, message, is_bot) VALUES (?, ?, 1)",
+            [userId, botResponse],
+            (err, result) => {
+              if (err) {
+                res.status(500).send(err);
+                return;
+              }
+              
+              res.json({
+                response: botResponse,
+                messageId: result.insertId
+              });
+            }
+          );
+        })
+        .catch(error => {
+          res.status(500).send(error.message);
+        });
+    }
+  );
+});
+
+// Lấy lịch sử chat của user
+app.get("/api/chat/history/:userId", (req, res) => {
+  const { userId } = req.params;
+  
+  db.query(
+    "SELECT * FROM chat_messages WHERE user_id = ? ORDER BY timestamp ASC",
+    [userId],
+    (err, result) => {
+      if (err) {
+        res.status(500).send(err);
+      } else {
+        res.json(result);
+      }
+    }
+  );
+});
+
+// Hàm xử lý tin nhắn và trả về câu trả lời
+async function processMessage(message, userId) {
+  message = message.toLowerCase();
+  
+  // Kiểm tra các lệnh điều khiển
+  if (message.includes("tưới nước") || message.includes("bật bơm")) {
+    // Bật bơm nước
+    db.query("UPDATE device SET state = 'active' WHERE device_name = 'pump'");
+    return "Đã bật bơm nước cho khu vườn.";
+  }
+  
+  if (message.includes("tắt bơm") || message.includes("dừng tưới")) {
+    // Tắt bơm nước
+    db.query("UPDATE device SET state = 'inactive' WHERE device_name = 'pump'");
+    return "Đã tắt bơm nước.";
+  }
+  
+  // Truy vấn thông tin
+  if (message.includes("nhiệt độ") || message.includes("độ ẩm")) {
+    const data = await new Promise((resolve, reject) => {
+      db.query(
+        "SELECT temperature, humidity FROM environmental_data ORDER BY timestamp DESC LIMIT 1",
+        (err, result) => {
+          if (err) reject(err);
+          else resolve(result[0] || {});
+        }
+      );
+    });
+    
+    if (data) {
+      return `Nhiệt độ hiện tại là ${data.temperature || 'N/A'}°C và độ ẩm là ${data.humidity || 'N/A'}%.`;
+    }
+  }
+  
+  if (message.includes("cây trồng") || message.includes("thu hoạch")) {
+    const plants = await new Promise((resolve, reject) => {
+      db.query(
+        "SELECT plant_name, end_date FROM plant",
+        (err, result) => {
+          if (err) reject(err);
+          else resolve(result);
+        }
+      );
+    });
+    
+    if (plants.length > 0) {
+      const plantInfo = plants.map(p => `${p.plant_name} (dự kiến thu hoạch: ${p.end_date})`).join(", ");
+      return `Các loại cây đang trồng: ${plantInfo}`;
+    }
+    return "Hiện chưa có thông tin về cây trồng.";
+  }
+  
+  if (message.includes("thiết bị") || message.includes("trạng thái")) {
+    const devices = await new Promise((resolve, reject) => {
+      db.query(
+        "SELECT device_name, state FROM device",
+        (err, result) => {
+          if (err) reject(err);
+          else resolve(result);
+        }
+      );
+    });
+    
+    if (devices.length > 0) {
+      const deviceInfo = devices.map(d => `${d.device_name} (${d.state})`).join(", ");
+      return `Trạng thái thiết bị: ${deviceInfo}`;
+    }
+    return "Hiện chưa có thông tin về thiết bị.";
+  }
+  
+  // Câu trả lời mặc định
+  return "Xin chào! Tôi là trợ lý SmartFarm. Tôi có thể giúp bạn kiểm tra nhiệt độ, độ ẩm, thông tin về cây trồng, điều khiển hệ thống tưới nước và nhiều thứ khác.";
+}
 
 // Chạy server
 const PORT = 5001;

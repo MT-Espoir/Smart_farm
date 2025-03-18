@@ -18,7 +18,7 @@ SET time_zone = "+00:00";
 /*!40101 SET NAMES utf8mb4 */;
 
 --
--- Database: `smartfarm_db`
+-- Database: `smartfarm`
 --
 
 -- --------------------------------------------------------
@@ -29,15 +29,18 @@ SET time_zone = "+00:00";
 
 CREATE TABLE `device` (
   `id` int(11) NOT NULL,
-  `device_name` varchar(50) NOT NULL
+  `device_name` varchar(50) NOT NULL,
+  `state` varchar(50) NOT NULL DEFAULT 'active'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 
 --
 -- Dumping data for table `device`
 --
 
-INSERT INTO `device` (`id`, `device_name`) VALUES
-(1, 'pump');
+INSERT INTO `device` (`id`, `device_name`, `state`) VALUES
+(19, 'led', 'active'),
+(20, 'fan', 'active'),
+(21, 'pump', 'active');
 
 -- --------------------------------------------------------
 
@@ -59,6 +62,33 @@ CREATE TABLE `plant` (
 INSERT INTO `plant` (`id`, `plant_name`, `start_date`, `end_date`) VALUES
 (1, 'tomato', '2025-03-03', '2025-03-06'),
 (2, '', '2025-03-02', '2025-03-14');
+
+--
+-- Table structure for table `chat_messages`
+--
+
+CREATE TABLE `chat_messages` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `user_id` varchar(50) NOT NULL,
+  `message` text NOT NULL,
+  `is_bot` tinyint(1) NOT NULL DEFAULT 0,
+  `timestamp` timestamp NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+
+--
+-- Table structure for table `environmental_data`
+--
+
+CREATE TABLE `environmental_data` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `timestamp` timestamp NOT NULL DEFAULT current_timestamp(),
+  `temperature` float DEFAULT NULL,
+  `humidity` float DEFAULT NULL,
+  `soil_moisture` float DEFAULT NULL,
+  `lux` float DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 
 --
 -- Indexes for dumped tables

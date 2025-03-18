@@ -5,7 +5,7 @@ import os
 # Cấu hình
 PORT = 'COM3'  # Thay đổi theo cổng của bạn
 BAUD_RATE = 115200
-OUTPUT_FILE = 'Data/sensor_data.csv'
+OUTPUT_FILE = 'backend/Data/sensor_data.csv'
 HEADER = "timestamp,temperature,humidity,soil_moisture,lux,pump_status\n"
 
 IMAGE_FOLDER = "images"

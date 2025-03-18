@@ -24,7 +24,7 @@ CORS(app, resources={
     }
 })
 socketio = SocketIO(app, cors_allowed_origins="*")
-DATA_FILE = r'Data/sensor_data.csv'
+DATA_FILE = r'backend/Data/sensor_data.csv'
 
 MQTT_BROKER = "broker.hivemq.com"  # Hoặc dùng MQTT broker riêng của bạn
 MQTT_PORT = 1883
@@ -35,7 +35,7 @@ mqtt_client = mqtt.Client()
 mqtt_client.connect(MQTT_BROKER, MQTT_PORT, 60)
 mqtt_client.loop_start()
 
-MODEL_PATH = r'Data/my_model.h5'
+MODEL_PATH = r'backend/Data/my_model.h5'
 if os.path.exists(MODEL_PATH):
     model = tf.keras.models.load_model(MODEL_PATH)
     print("Model loaded successfully!")

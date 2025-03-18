@@ -3,7 +3,7 @@ from datetime import datetime
 import os
 
 class PlantTracker:
-    def __init__(self, file_path='Data/plant_records.csv'):
+    def __init__(self, file_path='backend/Data/plant_records.csv'):
         self.file_path = file_path
         self.columns = ['plant_id', 'plant_name', 'planting_date', 'expected_harvest_date',
                         'notes', 'status']
