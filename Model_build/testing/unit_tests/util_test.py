@@ -1,5 +1,5 @@
 # unit_tests.py
-from ai_models.cnn_model import create_cnn_model, save_model, load_cnn_model
+from chatbot_models.cnn_model import create_cnn_model, save_model, load_cnn_model
 
 def test_model_save_load():
     model = create_cnn_model()

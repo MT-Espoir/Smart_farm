@@ -12,6 +12,8 @@ from flask_cors import CORS
 from werkzeug.utils import secure_filename
 import uuid
 from datetime import datetime
+from chatbot import chatbot_service
+import mysql.connector
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'secret!'
@@ -26,9 +28,20 @@ CORS(app, resources={
 socketio = SocketIO(app, cors_allowed_origins="*")
 DATA_FILE = r'backend/Data/sensor_data.csv'
 
+db_config = {
+    'host': 'localhost',
+    'user': 'root',
+    'password': '',
+    'database': 'smartfarm'
+}
+
 MQTT_BROKER = "broker.hivemq.com"  # Hoặc dùng MQTT broker riêng của bạn
 MQTT_PORT = 1883
-MQTT_TOPIC_COMMAND = "yolouno/pump"  # Chủ đề MQTT để điều khiển bơm nước
+MQTT_TOPIC_PUMP = "yolouno/pump"
+MQTT_TOPIC_FAN = "yolouno/fan"
+MQTT_TOPIC_LED = "yolouno/led"
+MQTT_TOPIC_COVER = "yolouno/cover"
+MQTT_TOPIC_COMMAND = "yolouno/command"
 
 # Kết nối MQTT
 mqtt_client = mqtt.Client()
@@ -82,6 +95,20 @@ def get_sensor_data():
         return jsonify(records)
     except Exception as e:
         print(f"Error in get_sensor_data: {str(e)}")
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/api/sensor_data/by-date/<date>', methods=['GET'])
+def get_sensor_data_by_date(date):
+    try:
+        # Use the utility function to get data by date
+        records = get_by_date(date)
+        
+        if not records:
+            return jsonify([]), 200
+            
+        return jsonify(records)
+    except Exception as e:
+        print(f"Error in get_sensor_data_by_date: {str(e)}")
         return jsonify({"error": str(e)}), 500
 
 @app.route('/api/upload-image', methods=['POST'])
@@ -186,12 +213,191 @@ def get_images():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+@app.route('/api/chatbot', methods=['POST'])
+def chatbot_api():
+    try:
+        data = request.json
+        message = data.get('message', '')
+        user_id = data.get('userId', '')
+        
+        # Get the basic response from the chatbot model
+        result = chatbot_service.get_response(message)
+        response = result['response']
+        intent = result['intent']
+        
+        # For certain intents, get more detailed information from the database
+        message = message.lower()
+        
+        # Connect to database for dynamic responses
+        conn = mysql.connector.connect(**db_config)
+        cursor = conn.cursor(dictionary=True)
+        
+        # Handle specific environmental queries
+        if intent == "Question for info":
+            # Check for specific environmental parameters in the message
+            if "nhiệt độ" in message or "nhiet do" in message:
+                try:
+                    cursor.execute("SELECT temperature FROM environmental_data ORDER BY timestamp DESC LIMIT 1")
+                    data = cursor.fetchone()
+                    if data and data['temperature']:
+                        response = f"Nhiệt độ hiện tại là {data['temperature']}°C."
+                    else:
+                        response = "Hiện không có dữ liệu về nhiệt độ."
+                except Exception as e:
+                    print(f"Error querying temperature: {e}")
+                    
+            elif "độ ẩm" in message or "do am" in message:
+                try:
+                    cursor.execute("SELECT humidity FROM environmental_data ORDER BY timestamp DESC LIMIT 1")
+                    data = cursor.fetchone()
+                    if data and data['humidity']:
+                        response = f"Độ ẩm hiện tại là {data['humidity']}%."
+                    else:
+                        response = "Hiện không có dữ liệu về độ ẩm."
+                except Exception as e:
+                    print(f"Error querying humidity: {e}")
+                    
+            elif "ánh sáng" in message or "anh sang" in message:
+                try:
+                    cursor.execute("SELECT lux FROM environmental_data ORDER BY timestamp DESC LIMIT 1")
+                    data = cursor.fetchone()
+                    if data and data['lux']:
+                        response = f"Cường độ ánh sáng hiện tại là {data['lux']} lux."
+                    else:
+                        response = "Hiện không có dữ liệu về ánh sáng."
+                except Exception as e:
+                    print(f"Error querying light: {e}")
+                    
+            else:
+                # General environmental data response
+                try:
+                    cursor.execute("SELECT temperature, humidity, lux FROM environmental_data ORDER BY timestamp DESC LIMIT 1")
+                    data = cursor.fetchone()
+                    if data:
+                        response = f"Nhiệt độ hiện tại là {data['temperature'] or 'N/A'}°C, độ ẩm là {data['humidity'] or 'N/A'}%, và cường độ ánh sáng là {data['lux'] or 'N/A'} lux."
+                    else:
+                        response = "Hiện không có dữ liệu cảm biến."
+                except Exception as e:
+                    print(f"Error querying environmental data: {e}")
+                
+        elif intent == "Question for info1" and "cây trồng" in message or "thu hoạch" in message:
+            try:
+                cursor.execute("SELECT plant_name, end_date FROM plant")
+                plants = cursor.fetchall()
+                if plants:
+                    plant_info = "\n".join([f"- {p['plant_name']} (thu hoạch: {p['end_date']})" for p in plants])
+                    response = f"Các loại cây đang trồng:\n{plant_info}"
+                else:
+                    response = "Hiện chưa có thông tin về cây trồng."
+            except Exception as e:
+                print(f"Error querying plants: {e}")
+                
+        elif intent == "Question for system status" and "thiết bị" in message or "trạng thái" in message:
+            try:
+                cursor.execute("SELECT device_name, state FROM device")
+                devices = cursor.fetchall()
+                if devices:
+                    device_info = ", ".join([f"{d['device_name']} ({d['state']})" for d in devices])
+                    response = f"Trạng thái thiết bị: {device_info}"
+                else:
+                    response = "Hiện chưa có thông tin về thiết bị."
+            except Exception as e:
+                print(f"Error querying devices: {e}")
+        
+        # Device control commands - separated for each device
+        elif "bật bơm" in message or "bat bom" in message:
+            try:
+                cursor.execute("UPDATE device SET state = 'active' WHERE device_name = 'pump'")
+                conn.commit()
+                response = "Đã bật bơm nước cho khu vườn."
+                # Send MQTT message to trigger the pump
+                mqtt_client.publish(MQTT_TOPIC_COMMAND, "ON")
+            except Exception as e:
+                print(f"Error updating pump state: {e}")
+                
+        elif "tắt bơm" in message or "tat bom" in message:
+            try:
+                cursor.execute("UPDATE device SET state = 'inactive' WHERE device_name = 'pump'")
+                conn.commit()
+                response = "Đã tắt bơm nước."
+                # Send MQTT message to turn off the pump
+                mqtt_client.publish(MQTT_TOPIC_COMMAND, "OFF")
+            except Exception as e:
+                print(f"Error updating pump state: {e}")
+                
+        elif "bật quạt" in message or "bat quat" in message:
+            try:
+                cursor.execute("UPDATE device SET state = 'active' WHERE device_name = 'fan'")
+                conn.commit()
+                response = "Đã bật quạt thông gió."
+                # Add MQTT publish if needed
+            except Exception as e:
+                print(f"Error updating fan state: {e}")
+                
+        elif "tắt quạt" in message or "tat quat" in message:
+            try:
+                cursor.execute("UPDATE device SET state = 'inactive' WHERE device_name = 'fan'")
+                conn.commit()
+                response = "Đã tắt quạt thông gió."
+                # Add MQTT publish if needed
+            except Exception as e:
+                print(f"Error updating fan state: {e}")
+                
+        elif "bật đèn" in message or "bat den" in message or "bật led" in message or "bat led" in message:
+            try:
+                cursor.execute("UPDATE device SET state = 'active' WHERE device_name = 'led'")
+                conn.commit()
+                response = "Đã bật đèn chiếu sáng."
+                # Add MQTT publish if needed
+            except Exception as e:
+                print(f"Error updating LED state: {e}")
+                
+        elif "tắt đèn" in message or "tat den" in message or "tắt led" in message or "tat led" in message:
+            try:
+                cursor.execute("UPDATE device SET state = 'inactive' WHERE device_name = 'led'")
+                conn.commit()
+                response = "Đã tắt đèn chiếu sáng."
+                # Add MQTT publish if needed
+            except Exception as e:
+                print(f"Error updating LED state: {e}")
+                
+        elif "mở máy che" in message or "mo may che" in message:
+            try:
+                cursor.execute("UPDATE device SET state = 'active' WHERE device_name = 'cover'")
+                conn.commit()
+                response = "Đã mở máy che cho khu vườn."
+                # Add MQTT publish if needed
+            except Exception as e:
+                print(f"Error updating cover state: {e}")
+                
+        elif "đóng máy che" in message or "dong may che" in message:
+            try:
+                cursor.execute("UPDATE device SET state = 'inactive' WHERE device_name = 'cover'")
+                conn.commit()
+                response = "Đã đóng máy che."
+                # Add MQTT publish if needed
+            except Exception as e:
+                print(f"Error updating cover state: {e}")
+        
+        conn.close()
+        
+        return jsonify({
+            'response': response,
+            'intent': intent
+        })
+        
+    except Exception as e:
+        print(f"Chatbot API error: {e}")
+        return jsonify({
+            'error': str(e),
+            'response': "Xin lỗi, tôi đang gặp sự cố kỹ thuật."
+        }), 500
 
 # def run_sensor_data():
 #     os.system('python sensor_data.py')
 
 def run_plant_tracker():
-    os.system('python plant_tracker.py')
+    os.system('python backend/plant_tracker.py')
 
 if __name__ == '__main__':
     # threading.Thread(target=run_sensor_data).start()

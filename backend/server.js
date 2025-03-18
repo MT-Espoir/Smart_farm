@@ -192,76 +192,68 @@ app.get("/api/chat/history/:userId", (req, res) => {
 
 // Hàm xử lý tin nhắn và trả về câu trả lời
 async function processMessage(message, userId) {
-  message = message.toLowerCase();
-  
-  // Kiểm tra các lệnh điều khiển
-  if (message.includes("tưới nước") || message.includes("bật bơm")) {
-    // Bật bơm nước
-    db.query("UPDATE device SET state = 'active' WHERE device_name = 'pump'");
-    return "Đã bật bơm nước cho khu vườn.";
-  }
-  
-  if (message.includes("tắt bơm") || message.includes("dừng tưới")) {
-    // Tắt bơm nước
-    db.query("UPDATE device SET state = 'inactive' WHERE device_name = 'pump'");
-    return "Đã tắt bơm nước.";
-  }
-  
-  // Truy vấn thông tin
-  if (message.includes("nhiệt độ") || message.includes("độ ẩm")) {
-    const data = await new Promise((resolve, reject) => {
-      db.query(
-        "SELECT temperature, humidity FROM environmental_data ORDER BY timestamp DESC LIMIT 1",
-        (err, result) => {
-          if (err) reject(err);
-          else resolve(result[0] || {});
-        }
-      );
+  try {
+    // Forward the request to the Flask chatbot API
+    const axios = require('axios');
+    const response = await axios.post('http://localhost:5000/api/chatbot', {
+      message: message,
+      userId: userId
     });
     
-    if (data) {
-      return `Nhiệt độ hiện tại là ${data.temperature || 'N/A'}°C và độ ẩm là ${data.humidity || 'N/A'}%.`;
-    }
-  }
-  
-  if (message.includes("cây trồng") && message.includes("thu hoạch")) {
-    const plants = await new Promise((resolve, reject) => {
-      db.query(
-        "SELECT plant_name, end_date FROM plant",
-        (err, result) => {
-          if (err) reject(err);
-          else resolve(result);
-        }
-      );
-    });
+    // Return the response from the chatbot
+    return response.data.response;
+  } catch (error) {
+    console.error("Error calling chatbot service:", error);
     
-    if (plants.length > 0) {
-      const plantInfo = plants.map(p => `- ${p.plant_name} (thu hoạch: ${p.end_date})`).join('\n');
-      return `Các loại cây đang trồng:\n${plantInfo}`;
-    }
-    return "Hiện chưa có thông tin về cây trồng.";
-  }
-  
-  if (message.includes("thiết bị") || message.includes("trạng thái")) {
-    const devices = await new Promise((resolve, reject) => {
-      db.query(
-        "SELECT device_name, state FROM device",
-        (err, result) => {
-          if (err) reject(err);
-          else resolve(result);
-        }
-      );
-    });
+    // Fallback to the existing logic if Flask server is unavailable
+    message = message.toLowerCase();
     
-    if (devices.length > 0) {
-      const deviceInfo = devices.map(d => `${d.device_name} (${d.state})`).join(", ");
-      return `Trạng thái thiết bị: ${deviceInfo}`;
+    // Enhanced fallback logic with more device controls
+    if (message.includes("bật bơm") || message.includes("bat bom")) {
+      db.query("UPDATE device SET state = 'active' WHERE device_name = 'pump'");
+      return "Đã bật bơm nước cho khu vườn.";
     }
-    return "Hiện chưa có thông tin về thiết bị.";
+    
+    if (message.includes("tắt bơm") || message.includes("tat bom")) {
+      db.query("UPDATE device SET state = 'inactive' WHERE device_name = 'pump'");
+      return "Đã tắt bơm nước.";
+    }
+    
+    if (message.includes("bật quạt") || message.includes("bat quat")) {
+      db.query("UPDATE device SET state = 'active' WHERE device_name = 'fan'");
+      return "Đã bật quạt thông gió.";
+    }
+    
+    if (message.includes("tắt quạt") || message.includes("tat quat")) {
+      db.query("UPDATE device SET state = 'inactive' WHERE device_name = 'fan'");
+      return "Đã tắt quạt thông gió.";
+    }
+    
+    if (message.includes("bật đèn") || message.includes("bat den") || 
+        message.includes("bật led") || message.includes("bat led")) {
+      db.query("UPDATE device SET state = 'active' WHERE device_name = 'led'");
+      return "Đã bật đèn chiếu sáng.";
+    }
+    
+    if (message.includes("tắt đèn") || message.includes("tat den") ||
+        message.includes("tắt led") || message.includes("tat led")) {
+      db.query("UPDATE device SET state = 'inactive' WHERE device_name = 'led'");
+      return "Đã tắt đèn chiếu sáng.";
+    }
+    
+    if (message.includes("mở máy che") || message.includes("mo may che")) {
+      db.query("UPDATE device SET state = 'active' WHERE device_name = 'cover'");
+      return "Đã mở máy che cho khu vườn.";
+    }
+    
+    if (message.includes("đóng máy che") || message.includes("dong may che")) {
+      db.query("UPDATE device SET state = 'inactive' WHERE device_name = 'cover'");
+      return "Đã đóng máy che.";
+    }
+    
+    // Default fallback response if everything fails
+    return "Xin lỗi, tôi đang gặp sự cố kết nối. Vui lòng thử lại sau.";
   }
-  
-  // Câu trả lời mặc định
-  return "Xin chào! Tôi là trợ lý SmartFarm. Tôi có thể giúp bạn kiểm tra nhiệt độ, độ ẩm, thông tin về cây trồng, điều khiển hệ thống tưới nước và nhiều thứ khác.";
 }
 
 // Chạy server

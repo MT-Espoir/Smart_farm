@@ -1,0 +1,16 @@
+trạng thái hệ thống|Question for system status|0.36487439274787903
+tôi cần hỗ trợ|needhelp|0.3390558063983917
+nhiệt độ|Question for info|0.3654603064060211
+các cây nào sắp thu hoạch|Question for info1|0.3489973545074463
+cây|Question for info1|0.2953789532184601
+nhiệt|Question for info|0.24020592868328094
+nhiệt độ|Question for info|0.3654603064060211
+nhietj do|Question for info|0.2990351915359497
+do ẩm|Question for info|0.3473981022834778
+độ ẩm|Question for info|0.31794625520706177
+info|Full info|0.2164405733346939
+thông tin|Full info|0.3675908148288727
+dữ liệu|Full info|0.2950493395328522
+dlieuuu|Question for info1|0.21786247193813324
+du lieu|Full info|0.31521424651145935
+python u cusersdelldesktopnew folderall projectchatbotchatbot . py|Question for system status|0.24746236205101013

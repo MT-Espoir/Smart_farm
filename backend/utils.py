@@ -107,4 +107,14 @@ def predict_image_file(image_path, model, class_labels):
     max_prob = float(prediction.flatten()[index])
     return class_labels[index], max_prob
 
+def get_by_date(date):
+    try:
+        df = load_data()
+        query_date = datetime.strptime(date, '%Y-%m-%d').date()
+        choose_date = df[df['timestamp'].dt.date == query_date]
 
+        # Return results as JSON
+        return choose_date.to_dict(orient='records')
+    except Exception as e:
+        print(f"Error retrieving data for date {date}: {str(e)}")
+        return []

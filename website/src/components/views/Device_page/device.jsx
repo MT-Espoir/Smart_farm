@@ -7,7 +7,16 @@ export default function Device() {
   const [newDevice, setNewDevice] = useState({ device_name: "", state: "active" });
 
   useEffect(() => {
+    // Initial fetch
     fetchDevices();
+
+    // Set up polling for updates every 3 seconds
+    const intervalId = setInterval(() => {
+      fetchDevices();
+    }, 3000);
+
+    // Clean up interval on component unmount
+    return () => clearInterval(intervalId);
   }, []);
 
   const fetchDevices = async () => {
@@ -19,6 +28,7 @@ export default function Device() {
     }
   };
 
+  // Rest of your component remains the same
   const handleAddDevice = async () => {
     if (!newDevice.device_name.trim()) {
       alert("Tên thiết bị không được để trống!");
