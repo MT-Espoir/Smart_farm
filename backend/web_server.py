@@ -57,15 +57,32 @@ def on_mqtt_connect(client, userdata, flags, rc):
     # Only subscribe if we haven't already
     if not mqtt_subscribed:
         client.subscribe(MQTT_TOPIC_SENSOR_DATA)
+        client.subscribe(MQTT_TOPIC_PUMP)
+        client.subscribe(MQTT_TOPIC_FAN)
+        client.subscribe(MQTT_TOPIC_LED)
+        client.subscribe(MQTT_TOPIC_COVER)
         mqtt_subscribed = True
-        print(f"Subscribed to {MQTT_TOPIC_SENSOR_DATA}")
-    
+        print(f"Subscribed to all device topics")
+
+recent_messages = set()
 def on_mqtt_message(client, userdata, msg):
     if msg.topic == MQTT_TOPIC_SENSOR_DATA:
         try:
             # Parse the JSON message
             payload = json.loads(msg.payload.decode())
             print(f"Received sensor data via MQTT: {payload}")
+            
+            # Check for duplicate messages using a cache of recent message timestamps
+            message_timestamp = payload.get('timestamp')
+            if message_timestamp in recent_messages:
+                print(f"Ignoring duplicate message with timestamp: {message_timestamp}")
+                return
+            
+            # Add to recent messages cache
+            recent_messages.add(message_timestamp)
+            # Keep cache size reasonable
+            if len(recent_messages) > 100:
+                recent_messages.pop()
             
             # Store in database
             store_sensor_data_in_db(
@@ -81,6 +98,45 @@ def on_mqtt_message(client, userdata, msg):
             
         except Exception as e:
             print(f"Error processing MQTT sensor data: {e}")
+
+    elif msg.topic in [MQTT_TOPIC_PUMP, MQTT_TOPIC_FAN, MQTT_TOPIC_LED, MQTT_TOPIC_COVER]:
+        try:
+            device_state = msg.payload.decode()
+            device_name = msg.topic.split('/')[-1]  # Extract device name from topic
+            
+            # Map the ON/OFF to active/inactive
+            state = "active" if device_state.upper() == "ON" else "inactive"
+            
+            # Update database
+            update_device_state_in_db(device_name, state)
+            print(f"Updated {device_name} state to {state} via MQTT")
+            
+        except Exception as e:
+            print(f"Error processing device status update: {e}")
+    elif msg.topic == MQTT_TOPIC_COVER:
+        try:
+            position = int(msg.payload.decode())
+            # If position > 50%, consider it active, otherwise inactive
+            state = "active" if position > 50 else "inactive"
+            update_device_state_in_db("cover", state)
+            print(f"Updated cover state to {state} (position: {position}) via MQTT")
+        except Exception as e:
+            print(f"Error processing cover position update: {e}")
+def update_device_state_in_db(device_name, state):
+    try:
+        conn = mysql.connector.connect(**db_config)
+        cursor = conn.cursor()
+        
+        query = "UPDATE device SET state = %s WHERE device_name = %s"
+        cursor.execute(query, (state, device_name))
+        conn.commit()
+        
+        cursor.close()
+        conn.close()
+        return True
+    except Exception as e:
+        print(f"Error updating device state in database: {e}")
+        return False
 
 # Function to store sensor data in the database
 def store_sensor_data_in_db(temperature, humidity, soil_moisture, lux, pump_status=0):

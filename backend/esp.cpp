@@ -29,13 +29,13 @@ unsigned long lastSensorTime = 0;             // Lần cập nhật cảm biến
 unsigned long lastMQTTTime = 0;               // Lần cập nhật MQTT gần nhất
 unsigned long lastHTTPTime = 0;               // Lần cập nhật HTTP gần nhất
 const unsigned long sensorInterval = 15000;    // Cập nhật cảm biến mỗi 5000ms (5s)
-const unsigned long mqttInterval = 1000;      // Cập nhật MQTT mỗi 1000ms (1s)
+const unsigned long mqttInterval = 5000;      // Cập nhật MQTT mỗi 1000ms (1s)
 const unsigned long httpInterval = 10000;     // Cập nhật HTTP mỗi 10000ms (10s)
 const unsigned long imageInterval = 10000;    // Cập nhật ảnh mỗi 10000ms (10s)
 
 // Kết nối
-constexpr char WIFI_SSID[] = "Min";
-constexpr char WIFI_PASSWORD[] = "123456789";
+constexpr char WIFI_SSID[] = "ACLAB";
+constexpr char WIFI_PASSWORD[] = "ACLAB2023";
 const char* mqtt_server = "test.mosquitto.org";
 const char* server_url = "http://localhost:5000/api/sensor_data";
 
@@ -358,7 +358,7 @@ void publishSensorData(float temp, float humidity, int soil, int lux) {
   serializeJson(doc, buffer);
   
   // Gửi dữ liệu
-  client.publish(TOPIC_SENSOR_DATA, buffer);
+  client.publish(TOPIC_SENSOR_DATA, buffer, false);
 }
 
 // Gửi trạng thái bơm qua MQTT
@@ -501,16 +501,16 @@ void loop() {
     autoRoofControl(luxValue, soilMoistureValue);
 
     // In thông tin ra Serial Monitor
-    // Serial.print("Temp: ");
-    // Serial.print(temp);
-    // Serial.print("°C, Hum: ");
-    // Serial.print(hum);
-    // Serial.print("%, Soil: ");
-    // Serial.print(soilMoistureValue);
-    // Serial.print("%, Light: ");
-    // Serial.print(luxValue);
-    // Serial.print(", Pump: ");
-    // Serial.println(pump_status ? "ON" : "OFF");
+    Serial.print("Temp: ");
+    Serial.print(temp);
+    Serial.print("°C, Hum: ");
+    Serial.print(hum);
+    Serial.print("%, Soil: ");
+    Serial.print(soilMoistureValue);
+    Serial.print("%, Light: ");
+    Serial.print(luxValue);
+    Serial.print(", Pump: ");
+    Serial.println(pump_status ? "ON" : "OFF");
     
     // Gửi dữ liệu qua MQTT nếu đã kết nối
     if (client.connected()) {
@@ -519,17 +519,17 @@ void loop() {
   }
   
   // Cập nhật HTTP mỗi 10 giây
-  // if (currentMillis - lastHTTPTime >= httpInterval) {
-  //   lastHTTPTime = currentMillis;
+  if (currentMillis - lastHTTPTime >= httpInterval) {
+    lastHTTPTime = currentMillis;
     
-  //   if (WiFi.status() == WL_CONNECTED) {
-  //     // Gửi dữ liệu lên server
-  //     sendDataToServer(DHT.getTemperature(), DHT.getHumidity(), previousSoilMoistureValue, previousLuxValue);
+    if (WiFi.status() == WL_CONNECTED) {
+      // Gửi dữ liệu lên server
+      sendDataToServer(DHT.getTemperature(), DHT.getHumidity(), previousSoilMoistureValue, previousLuxValue);
       
-  //     // Kiểm tra trạng thái thiết bị từ server
-  //     checkDeviceStatus();
-  //   }
-  // }
+      // Kiểm tra trạng thái thiết bị từ server
+      checkDeviceStatus();
+    }
+  }
   
   // Cập nhật servo liên tục
   myservo.tick();
