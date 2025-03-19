@@ -8,7 +8,7 @@ BAUD_RATE = 115200
 OUTPUT_FILE = 'backend/Data/sensor_data.csv'
 HEADER = "timestamp,temperature,humidity,soil_moisture,lux,pump_status\n"
 
-IMAGE_FOLDER = "images"
+IMAGE_FOLDER = "backend/Data/images"
 os.makedirs(IMAGE_FOLDER, exist_ok=True)
 
 # Kiểm tra file tồn tại

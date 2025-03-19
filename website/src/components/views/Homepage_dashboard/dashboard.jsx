@@ -107,7 +107,7 @@ const Dashboard = () => {
         const data = await response.json();
         if (data.length > 0) {
           // Cập nhật dữ liệu hiện tại
-          const latestData = data[data.length - 1];
+          const latestData = data[0];
           setSensorData({
             temperature: latestData.temperature,
             humidity: latestData.humidity,
@@ -116,7 +116,7 @@ const Dashboard = () => {
           });
 
           // Cập nhật dữ liệu lịch sử
-          const last20Records = data.slice(-10);
+          const last20Records = data.slice(0, 10);
           setHistoricalData({
             timestamps: last20Records.map(record => new Date(record.timestamp).toLocaleTimeString()),
             temperatures: last20Records.map(record => record.temperature),
@@ -132,6 +132,38 @@ const Dashboard = () => {
     fetchData();
     const interval = setInterval(fetchData, 5000);
     return () => clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
+    // Connect to Socket.io for real-time updates
+    const socket = io("http://localhost:5000");
+    
+    socket.on("new_sensor_data", (newData) => {
+      console.log("Received new sensor data:", newData);
+      setSensorData({
+        temperature: newData.temperature,
+        humidity: newData.humidity,
+        soil_moisture: newData.soil_moisture,
+        lux: newData.lux,
+      });
+      
+      // Update historical data by adding the new point
+      setHistoricalData(prevData => {
+        const newTimestamp = new Date().toLocaleTimeString();
+        
+        return {
+          timestamps: [newTimestamp, ...prevData.timestamps.slice(0, 9)],
+          temperatures: [newData.temperature, ...prevData.temperatures.slice(0, 9)],
+          humidities: [newData.humidity, ...prevData.humidities.slice(0, 9)],
+          soil_moistures: [newData.soil_moisture, ...prevData.soil_moistures.slice(0, 9)],
+        };
+      });
+    });
+    
+    // Cleanup function
+    return () => {
+      socket.disconnect();
+    };
   }, []);
 
   // Cấu hình cho biểu đồ nhiệt độ và độ ẩm

@@ -3,32 +3,52 @@ import os
 import pandas as pd
 from datetime import datetime, timedelta
 import numpy as np
+import mysql.connector
 from keras._tf_keras.keras.preprocessing.image import load_img, img_to_array
-
 DATA_FILE = "backend/Data/sensor_data.csv"
 
 
+db_config = {
+    'host': 'localhost',
+    'user': 'root',
+    'password': '',
+    'database': 'smartfarm'
+}
+
+
 def get_latest_data():
-    if os.path.exists(DATA_FILE):
-        df = pd.read_csv(DATA_FILE)
-        if not df.empty:
-            latest = df.iloc[-1]
-            return {
-                'timestamp': latest['timestamp'],
-                'temperature': latest['temperature'],
-                'humidity': latest['humidity'],
-                'soil_moisture': latest['soil_moisture'],
-                'lux': latest['lux'],
-                'pump_status': latest['pump_status']
-            }
+    try:
+        conn = mysql.connector.connect(**db_config)
+        cursor = conn.cursor(dictionary=True)
+        cursor.execute("SELECT * FROM environmental_data ORDER BY timestamp DESC LIMIT 1")
+        latest = cursor.fetchone()
+        cursor.close()
+        conn.close()
+        
+        if latest:
+            return latest
+    except Exception as e:
+        print(f"Error getting latest data: {e}")
     return None
 
 def load_data():
-    if os.path.exists(DATA_FILE):
-        df = pd.read_csv(DATA_FILE)
-        df['timestamp'] = pd.to_datetime(df['timestamp'])
+    try:
+        conn = mysql.connector.connect(**db_config)
+        cursor = conn.cursor(dictionary=True)
+        cursor.execute("SELECT * FROM environmental_data ORDER BY timestamp DESC")
+        records = cursor.fetchall()
+        cursor.close()
+        conn.close()
+        
+        # Convert to dataframe for backward compatibility
+        import pandas as pd
+        df = pd.DataFrame(records)
+        if not df.empty:
+            df['timestamp'] = pd.to_datetime(df['timestamp'])
         return df
-    return pd.DataFrame()
+    except Exception as e:
+        print(f"Error loading data: {e}")
+        return pd.DataFrame()
 
 def get_by_date(date):
     try:

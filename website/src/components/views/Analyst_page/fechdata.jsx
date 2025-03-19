@@ -5,8 +5,9 @@ function FetchData() {
     const [data, setData] = useState([]);
 
     useEffect(() => {
-        axios.get("/pythonJSON.json")
-        .then(res => setData(Object.values(res.data)))
+        // Use the API instead of static JSON file
+        axios.get("http://localhost:5000/api/sensor_data")
+        .then(res => setData(res.data))
         .catch(err => console.log(err));
     }, []);
 
@@ -32,7 +33,7 @@ function FetchData() {
                             <td className="border p-2">{row.soil_moisture}</td>
                             <td className="border p-2">{row.lux}</td>
                             <td className="border p-2">
-                                {row.pump_status === "1" ? (
+                                {row.pump_status ? (
                                     <span className="text-green-600">Bật</span>
                                 ) : (
                                     <span className="text-red-600">Tắt</span>

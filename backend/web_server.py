@@ -1,6 +1,9 @@
 from flask import Flask, render_template, request, jsonify, send_from_directory
 from flask_socketio import SocketIO, emit
 import paho.mqtt.client as mqtt
+import json
+import threading
+from datetime import datetime
 import tensorflow as tf
 from utils import *
 from plant_tracker import PlantTracker
@@ -35,20 +38,81 @@ db_config = {
     'database': 'smartfarm'
 }
 
-MQTT_BROKER = "broker.hivemq.com"  # Hoặc dùng MQTT broker riêng của bạn
+MQTT_BROKER = "test.mosquitto.org"  # Hoặc dùng MQTT broker riêng của bạn
 MQTT_PORT = 1883
 MQTT_TOPIC_PUMP = "yolouno/pump"
 MQTT_TOPIC_FAN = "yolouno/fan"
 MQTT_TOPIC_LED = "yolouno/led"
 MQTT_TOPIC_COVER = "yolouno/cover"
 MQTT_TOPIC_COMMAND = "yolouno/command"
+MQTT_TOPIC_SENSOR_DATA = "yolouno/sensor_data"  # Add this line
 
-# Kết nối MQTT
-mqtt_client = mqtt.Client()
+# Add this global flag to prevent duplicate subscriptions
+mqtt_subscribed = False
+# Add these functions for MQTT callbacks
+def on_mqtt_connect(client, userdata, flags, rc):
+    global mqtt_subscribed
+    print(f"Connected to MQTT broker with result code {rc}")
+    
+    # Only subscribe if we haven't already
+    if not mqtt_subscribed:
+        client.subscribe(MQTT_TOPIC_SENSOR_DATA)
+        mqtt_subscribed = True
+        print(f"Subscribed to {MQTT_TOPIC_SENSOR_DATA}")
+    
+def on_mqtt_message(client, userdata, msg):
+    if msg.topic == MQTT_TOPIC_SENSOR_DATA:
+        try:
+            # Parse the JSON message
+            payload = json.loads(msg.payload.decode())
+            print(f"Received sensor data via MQTT: {payload}")
+            
+            # Store in database
+            store_sensor_data_in_db(
+                payload.get('temperature'),
+                payload.get('humidity'),
+                payload.get('soil_moisture'),
+                payload.get('lux'),
+                payload.get('pump_status', 0)
+            )
+            
+            # Emit to web clients via socketio if needed
+            socketio.emit('new_sensor_data', payload)
+            
+        except Exception as e:
+            print(f"Error processing MQTT sensor data: {e}")
+
+# Function to store sensor data in the database
+def store_sensor_data_in_db(temperature, humidity, soil_moisture, lux, pump_status=0):
+    try:
+        conn = mysql.connector.connect(**db_config)
+        cursor = conn.cursor()
+        
+        # Insert data into database
+        query = """INSERT INTO environmental_data 
+                  (timestamp, temperature, humidity, soil_moisture, lux) 
+                  VALUES (NOW(), %s, %s, %s, %s)"""
+                  
+        cursor.execute(query, (temperature, humidity, soil_moisture, lux))
+        conn.commit()
+        
+        cursor.close()
+        conn.close()
+        print(f"Stored sensor data in database: Temp={temperature}°C, Humidity={humidity}%, Soil={soil_moisture}%, Light={lux}")
+        return True
+    except Exception as e:
+        print(f"Error storing sensor data in database: {e}")
+        return False
+
+# Update MQTT client initialization with correct API version
+mqtt_client = mqtt.Client(callback_api_version=mqtt.CallbackAPIVersion.VERSION1)
+mqtt_client.on_connect = on_mqtt_connect
+mqtt_client.on_message = on_mqtt_message
 mqtt_client.connect(MQTT_BROKER, MQTT_PORT, 60)
 mqtt_client.loop_start()
 
 MODEL_PATH = r'backend/Data/my_model.h5'
+
 if os.path.exists(MODEL_PATH):
     model = tf.keras.models.load_model(MODEL_PATH)
     print("Model loaded successfully!")
@@ -82,17 +146,28 @@ def allowed_file(filename):
 @app.route('/api/sensor_data', methods=['GET'])
 def get_sensor_data():
     try:
-        data = load_data()
-        if data.empty:
-            return jsonify({"error": "No data available"}), 404
+        # Only use the database - no CSV
+        conn = mysql.connector.connect(**db_config)
+        cursor = conn.cursor(dictionary=True)
+        
+        # Get data from database (limit to recent entries)
+        cursor.execute("SELECT * FROM environmental_data ORDER BY timestamp DESC LIMIT 100")
+        records = cursor.fetchall()
+        
+        cursor.close()
+        conn.close()
+        
+        if not records:
+            return jsonify([]), 200
             
-        # Convert to records and handle NaN values
-        records = data.replace({np.nan: None}).to_dict(orient='records')
+        # Convert datetime objects to ISO format strings for JSON serialization
+        for record in records:
+            if 'timestamp' in record and record['timestamp']:
+                record['timestamp'] = record['timestamp'].isoformat()
         
-        # Add debug print
-        print("Sending response with", len(records), "records")
-        
+        print(f"Sending response with {len(records)} records from database")
         return jsonify(records)
+        
     except Exception as e:
         print(f"Error in get_sensor_data: {str(e)}")
         return jsonify({"error": str(e)}), 500
@@ -393,8 +468,8 @@ def chatbot_api():
             'response': "Xin lỗi, tôi đang gặp sự cố kỹ thuật."
         }), 500
 
-# def run_sensor_data():
-#     os.system('python sensor_data.py')
+def run_sensor_data():
+     os.system('python backend/sensor_data.py')
 
 def run_plant_tracker():
     os.system('python backend/plant_tracker.py')
