@@ -16,7 +16,8 @@ from werkzeug.utils import secure_filename
 import uuid
 from datetime import datetime
 from chatbot import chatbot_service
-import mysql.connector
+from pymongo import MongoClient
+from bson.objectid import ObjectId
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'secret!'
@@ -31,12 +32,13 @@ CORS(app, resources={
 socketio = SocketIO(app, cors_allowed_origins="*")
 DATA_FILE = r'backend/Data/sensor_data.csv'
 
-db_config = {
-    'host': 'localhost',
-    'user': 'root',
-    'password': '',
-    'database': 'smartfarm'
-}
+# Kết nối MongoDB thay vì MySQL
+mongo_client = MongoClient("mongodb://localhost:27017/")
+mongo_db = mongo_client["smartfarm"]
+devices_collection = mongo_db["devices"]
+environmental_data_collection = mongo_db["environmental_data"]
+plants_collection = mongo_db["plants"]
+chat_messages_collection = mongo_db["chat_messages"]
 
 MQTT_BROKER = "test.mosquitto.org"  # Hoặc dùng MQTT broker riêng của bạn
 MQTT_PORT = 1883
@@ -84,7 +86,7 @@ def on_mqtt_message(client, userdata, msg):
             if len(recent_messages) > 100:
                 recent_messages.pop()
             
-            # Store in database
+            # Store in MongoDB instead of SQL
             store_sensor_data_in_db(
                 payload.get('temperature'),
                 payload.get('humidity'),
@@ -107,7 +109,7 @@ def on_mqtt_message(client, userdata, msg):
             # Map the ON/OFF to active/inactive
             state = "active" if device_state.upper() == "ON" else "inactive"
             
-            # Update database
+            # Update MongoDB
             update_device_state_in_db(device_name, state)
             print(f"Updated {device_name} state to {state} via MQTT")
             
@@ -122,52 +124,45 @@ def on_mqtt_message(client, userdata, msg):
             print(f"Updated cover state to {state} (position: {position}) via MQTT")
         except Exception as e:
             print(f"Error processing cover position update: {e}")
+
 def update_device_state_in_db(device_name, state):
     try:
-        conn = mysql.connector.connect(**db_config)
-        cursor = conn.cursor()
+        # Cập nhật trạng thái thiết bị trong MongoDB
+        result = devices_collection.update_one(
+            {"device_name": device_name},
+            {"$set": {"state": state}}
+        )
         
-        query = "UPDATE device SET state = %s WHERE device_name = %s"
-        cursor.execute(query, (state, device_name))
-        conn.commit()
-        
-        cursor.close()
-        conn.close()
-        return True
+        if result.modified_count > 0:
+            print(f"Device {device_name} state updated to {state}")
+            return True
+        else:
+            print(f"Device {device_name} not found in database")
+            return False
     except Exception as e:
         print(f"Error updating device state in database: {e}")
         return False
 
-# Function to store sensor data in the database
+# Function to store sensor data in MongoDB
 def store_sensor_data_in_db(temperature, humidity, soil_moisture, lux, pump_status=0):
     try:
-        conn = mysql.connector.connect(**db_config)
-        cursor = conn.cursor()
+        # Chèn dữ liệu cảm biến vào MongoDB
+        sensor_data = {
+            "timestamp": datetime.now(),
+            "temperature": temperature,
+            "humidity": humidity,
+            "soil_moisture": soil_moisture,
+            "lux": lux
+        }
         
-        # Insert data into database
-        query = """INSERT INTO environmental_data 
-                  (timestamp, temperature, humidity, soil_moisture, lux) 
-                  VALUES (NOW(), %s, %s, %s, %s)"""
-                  
-        cursor.execute(query, (temperature, humidity, soil_moisture, lux))
-        conn.commit()
-        
-        cursor.close()
-        conn.close()
-        print(f"Stored sensor data in database: Temp={temperature}°C, Humidity={humidity}%, Soil={soil_moisture}%, Light={lux}")
+        environmental_data_collection.insert_one(sensor_data)
+        print(f"Stored sensor data in MongoDB: Temp={temperature}°C, Humidity={humidity}%, Soil={soil_moisture}%, Light={lux}")
         return True
     except Exception as e:
-        print(f"Error storing sensor data in database: {e}")
+        print(f"Error storing sensor data in MongoDB: {e}")
         return False
 
-# Update MQTT client initialization with correct API version
-mqtt_client = mqtt.Client(callback_api_version=mqtt.CallbackAPIVersion.VERSION1)
-mqtt_client.on_connect = on_mqtt_connect
-mqtt_client.on_message = on_mqtt_message
-mqtt_client.connect(MQTT_BROKER, MQTT_PORT, 60)
-mqtt_client.loop_start()
-
-MODEL_PATH = r'backend/Data/my_model.h5'
+MODEL_PATH = r'backend\Data\my_model.h5' 
 
 if os.path.exists(MODEL_PATH):
     model = tf.keras.models.load_model(MODEL_PATH)
@@ -203,15 +198,7 @@ def allowed_file(filename):
 def get_sensor_data():
     try:
         # Only use the database - no CSV
-        conn = mysql.connector.connect(**db_config)
-        cursor = conn.cursor(dictionary=True)
-        
-        # Get data from database (limit to recent entries)
-        cursor.execute("SELECT * FROM environmental_data ORDER BY timestamp DESC LIMIT 100")
-        records = cursor.fetchall()
-        
-        cursor.close()
-        conn.close()
+        records = list(environmental_data_collection.find().sort("timestamp", -1).limit(100))
         
         if not records:
             return jsonify([]), 200
@@ -359,18 +346,13 @@ def chatbot_api():
         # For certain intents, get more detailed information from the database
         message = message.lower()
         
-        # Connect to database for dynamic responses
-        conn = mysql.connector.connect(**db_config)
-        cursor = conn.cursor(dictionary=True)
-        
         # Handle specific environmental queries
         if intent == "Question for info":
             # Check for specific environmental parameters in the message
             if "nhiệt độ" in message or "nhiet do" in message:
                 try:
-                    cursor.execute("SELECT temperature FROM environmental_data ORDER BY timestamp DESC LIMIT 1")
-                    data = cursor.fetchone()
-                    if data and data['temperature']:
+                    data = environmental_data_collection.find_one(sort=[("timestamp", -1)])
+                    if data and data.get('temperature'):
                         response = f"Nhiệt độ hiện tại là {data['temperature']}°C."
                     else:
                         response = "Hiện không có dữ liệu về nhiệt độ."
@@ -379,9 +361,8 @@ def chatbot_api():
                     
             elif "độ ẩm" in message or "do am" in message:
                 try:
-                    cursor.execute("SELECT humidity FROM environmental_data ORDER BY timestamp DESC LIMIT 1")
-                    data = cursor.fetchone()
-                    if data and data['humidity']:
+                    data = environmental_data_collection.find_one(sort=[("timestamp", -1)])
+                    if data and data.get('humidity'):
                         response = f"Độ ẩm hiện tại là {data['humidity']}%."
                     else:
                         response = "Hiện không có dữ liệu về độ ẩm."
@@ -390,9 +371,8 @@ def chatbot_api():
                     
             elif "ánh sáng" in message or "anh sang" in message:
                 try:
-                    cursor.execute("SELECT lux FROM environmental_data ORDER BY timestamp DESC LIMIT 1")
-                    data = cursor.fetchone()
-                    if data and data['lux']:
+                    data = environmental_data_collection.find_one(sort=[("timestamp", -1)])
+                    if data and data.get('lux'):
                         response = f"Cường độ ánh sáng hiện tại là {data['lux']} lux."
                     else:
                         response = "Hiện không có dữ liệu về ánh sáng."
@@ -402,10 +382,9 @@ def chatbot_api():
             else:
                 # General environmental data response
                 try:
-                    cursor.execute("SELECT temperature, humidity, lux FROM environmental_data ORDER BY timestamp DESC LIMIT 1")
-                    data = cursor.fetchone()
+                    data = environmental_data_collection.find_one(sort=[("timestamp", -1)])
                     if data:
-                        response = f"Nhiệt độ hiện tại là {data['temperature'] or 'N/A'}°C, độ ẩm là {data['humidity'] or 'N/A'}%, và cường độ ánh sáng là {data['lux'] or 'N/A'} lux."
+                        response = f"Nhiệt độ hiện tại là {data.get('temperature', 'N/A')}°C, độ ẩm là {data.get('humidity', 'N/A')}%, và cường độ ánh sáng là {data.get('lux', 'N/A')} lux."
                     else:
                         response = "Hiện không có dữ liệu cảm biến."
                 except Exception as e:
@@ -413,8 +392,7 @@ def chatbot_api():
                 
         elif intent == "Question for info1" and "cây trồng" in message or "thu hoạch" in message:
             try:
-                cursor.execute("SELECT plant_name, end_date FROM plant")
-                plants = cursor.fetchall()
+                plants = list(plants_collection.find())
                 if plants:
                     plant_info = "\n".join([f"- {p['plant_name']} (thu hoạch: {p['end_date']})" for p in plants])
                     response = f"Các loại cây đang trồng:\n{plant_info}"
@@ -425,8 +403,7 @@ def chatbot_api():
                 
         elif intent == "Question for system status" and "thiết bị" in message or "trạng thái" in message:
             try:
-                cursor.execute("SELECT device_name, state FROM device")
-                devices = cursor.fetchall()
+                devices = list(devices_collection.find())
                 if devices:
                     device_info = ", ".join([f"{d['device_name']} ({d['state']})" for d in devices])
                     response = f"Trạng thái thiết bị: {device_info}"
@@ -438,79 +415,111 @@ def chatbot_api():
         # Device control commands - separated for each device
         elif "bật bơm" in message or "bat bom" in message:
             try:
-                cursor.execute("UPDATE device SET state = 'active' WHERE device_name = 'pump'")
-                conn.commit()
-                response = "Đã bật bơm nước cho khu vườn."
-                # Send MQTT message to trigger the pump
-                mqtt_client.publish(MQTT_TOPIC_COMMAND, "ON")
+                result = devices_collection.update_one(
+                    {"device_name": "pump"},
+                    {"$set": {"state": "active"}}
+                )
+                if result.modified_count > 0:
+                    response = "Đã bật bơm nước cho khu vườn."
+                    # Send MQTT message to trigger the pump
+                    mqtt_client.publish(MQTT_TOPIC_COMMAND, "ON")
+                else:
+                    response = "Không tìm thấy thiết bị bơm nước."
             except Exception as e:
                 print(f"Error updating pump state: {e}")
                 
         elif "tắt bơm" in message or "tat bom" in message:
             try:
-                cursor.execute("UPDATE device SET state = 'inactive' WHERE device_name = 'pump'")
-                conn.commit()
-                response = "Đã tắt bơm nước."
-                # Send MQTT message to turn off the pump
-                mqtt_client.publish(MQTT_TOPIC_COMMAND, "OFF")
+                result = devices_collection.update_one(
+                    {"device_name": "pump"},
+                    {"$set": {"state": "inactive"}}
+                )
+                if result.modified_count > 0:
+                    response = "Đã tắt bơm nước."
+                    # Send MQTT message to turn off the pump
+                    mqtt_client.publish(MQTT_TOPIC_COMMAND, "OFF")
+                else:
+                    response = "Không tìm thấy thiết bị bơm nước."
             except Exception as e:
                 print(f"Error updating pump state: {e}")
                 
         elif "bật quạt" in message or "bat quat" in message:
             try:
-                cursor.execute("UPDATE device SET state = 'active' WHERE device_name = 'fan'")
-                conn.commit()
-                response = "Đã bật quạt thông gió."
-                # Add MQTT publish if needed
+                result = devices_collection.update_one(
+                    {"device_name": "fan"},
+                    {"$set": {"state": "active"}}
+                )
+                if result.modified_count > 0:
+                    response = "Đã bật quạt thông gió."
+                else:
+                    response = "Không tìm thấy thiết bị quạt thông gió."
             except Exception as e:
                 print(f"Error updating fan state: {e}")
                 
         elif "tắt quạt" in message or "tat quat" in message:
             try:
-                cursor.execute("UPDATE device SET state = 'inactive' WHERE device_name = 'fan'")
-                conn.commit()
-                response = "Đã tắt quạt thông gió."
-                # Add MQTT publish if needed
+                result = devices_collection.update_one(
+                    {"device_name": "fan"},
+                    {"$set": {"state": "inactive"}}
+                )
+                if result.modified_count > 0:
+                    response = "Đã tắt quạt thông gió."
+                else:
+                    response = "Không tìm thấy thiết bị quạt thông gió."
             except Exception as e:
                 print(f"Error updating fan state: {e}")
                 
         elif "bật đèn" in message or "bat den" in message or "bật led" in message or "bat led" in message:
             try:
-                cursor.execute("UPDATE device SET state = 'active' WHERE device_name = 'led'")
-                conn.commit()
-                response = "Đã bật đèn chiếu sáng."
-                # Add MQTT publish if needed
+                result = devices_collection.update_one(
+                    {"device_name": "led"},
+                    {"$set": {"state": "active"}}
+                )
+                if result.modified_count > 0:
+                    response = "Đã bật đèn chiếu sáng."
+                else:
+                    response = "Không tìm thấy thiết bị đèn chiếu sáng."
             except Exception as e:
                 print(f"Error updating LED state: {e}")
                 
         elif "tắt đèn" in message or "tat den" in message or "tắt led" in message or "tat led" in message:
             try:
-                cursor.execute("UPDATE device SET state = 'inactive' WHERE device_name = 'led'")
-                conn.commit()
-                response = "Đã tắt đèn chiếu sáng."
-                # Add MQTT publish if needed
+                result = devices_collection.update_one(
+                    {"device_name": "led"},
+                    {"$set": {"state": "inactive"}}
+                )
+                if result.modified_count > 0:
+                    response = "Đã tắt đèn chiếu sáng."
+                else:
+                    response = "Không tìm thấy thiết bị đèn chiếu sáng."
             except Exception as e:
                 print(f"Error updating LED state: {e}")
                 
         elif "mở máy che" in message or "mo may che" in message:
             try:
-                cursor.execute("UPDATE device SET state = 'active' WHERE device_name = 'cover'")
-                conn.commit()
-                response = "Đã mở máy che cho khu vườn."
-                # Add MQTT publish if needed
+                result = devices_collection.update_one(
+                    {"device_name": "cover"},
+                    {"$set": {"state": "active"}}
+                )
+                if result.modified_count > 0:
+                    response = "Đã mở máy che cho khu vườn."
+                else:
+                    response = "Không tìm thấy thiết bị máy che."
             except Exception as e:
                 print(f"Error updating cover state: {e}")
                 
         elif "đóng máy che" in message or "dong may che" in message:
             try:
-                cursor.execute("UPDATE device SET state = 'inactive' WHERE device_name = 'cover'")
-                conn.commit()
-                response = "Đã đóng máy che."
-                # Add MQTT publish if needed
+                result = devices_collection.update_one(
+                    {"device_name": "cover"},
+                    {"$set": {"state": "inactive"}}
+                )
+                if result.modified_count > 0:
+                    response = "Đã đóng máy che."
+                else:
+                    response = "Không tìm thấy thiết bị máy che."
             except Exception as e:
                 print(f"Error updating cover state: {e}")
-        
-        conn.close()
         
         return jsonify({
             'response': response,
@@ -523,6 +532,142 @@ def chatbot_api():
             'error': str(e),
             'response': "Xin lỗi, tôi đang gặp sự cố kỹ thuật."
         }), 500
+
+@app.route('/api/chat/history/<user_id>', methods=['GET'])
+def get_chat_history(user_id):
+    try:
+        # Sử dụng MongoDB để lấy lịch sử chat
+        history = list(chat_messages_collection.find(
+            {"user_id": user_id}
+        ).sort("timestamp", 1))
+        
+        # Chuyển đổi ObjectId thành string để có thể serialize thành JSON
+        for message in history:
+            message["_id"] = str(message["_id"])
+            if isinstance(message.get("timestamp"), datetime):
+                message["timestamp"] = message["timestamp"].isoformat()
+        
+        return jsonify(history)
+    except Exception as e:
+        print(f"Error retrieving chat history: {e}")
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/api/chat/message', methods=['POST'])
+def add_chat_message():
+    try:
+        data = request.json
+        user_id = data.get('userId')
+        message = data.get('message')
+        is_bot = data.get('isBot', False)
+        
+        # Lưu tin nhắn vào MongoDB
+        result = chat_messages_collection.insert_one({
+            "user_id": user_id,
+            "message": message,
+            "is_bot": is_bot,
+            "timestamp": datetime.now()
+        })
+        
+        return jsonify({
+            "success": True,
+            "messageId": str(result.inserted_id)
+        })
+    except Exception as e:
+        print(f"Error adding chat message: {e}")
+        return jsonify({"error": str(e)}), 500
+
+# Khởi tạo kết nối MQTT
+mqtt_client = mqtt.Client()
+mqtt_client.on_connect = on_mqtt_connect
+mqtt_client.on_message = on_mqtt_message
+
+def get_device_state(device_name):
+    """Lấy trạng thái của thiết bị từ MongoDB"""
+    try:
+        device = devices_collection.find_one({"device_name": device_name})
+        if device:
+            return device.get("state", "unknown")
+        return "unknown"
+    except Exception as e:
+        print(f"Error getting device state for {device_name}: {e}")
+        return "unknown"
+
+def get_by_date(date_str):
+    """Lấy dữ liệu cảm biến theo ngày từ MongoDB"""
+    try:
+        # Chuyển đổi chuỗi ngày thành đối tượng datetime
+        date_parts = date_str.split('-')
+        if len(date_parts) != 3:
+            raise ValueError("Invalid date format. Use YYYY-MM-DD")
+            
+        year, month, day = map(int, date_parts)
+        start_date = datetime(year, month, day, 0, 0, 0)
+        end_date = datetime(year, month, day, 23, 59, 59)
+        
+        # Truy vấn MongoDB với phạm vi ngày
+        records = list(environmental_data_collection.find({
+            "timestamp": {
+                "$gte": start_date, 
+                "$lte": end_date
+            }
+        }).sort("timestamp", 1))
+        
+        # Chuyển đổi các đối tượng datetime thành string
+        for record in records:
+            record["_id"] = str(record["_id"])
+            if isinstance(record.get("timestamp"), datetime):
+                record["timestamp"] = record["timestamp"].isoformat()
+                
+        return records
+        
+    except Exception as e:
+        print(f"Error fetching data for date {date_str}: {e}")
+        raise e
+
+# Kết nối tới MQTT broker khi khởi động
+try:
+    mqtt_client.connect(MQTT_BROKER, MQTT_PORT, 60)
+    mqtt_client.loop_start()
+    print(f"Connected to MQTT broker at {MQTT_BROKER}:{MQTT_PORT}")
+except Exception as e:
+    print(f"Failed to connect to MQTT broker: {e}")
+
+def publish_device_command(device, command):
+    """Gửi lệnh điều khiển thiết bị qua MQTT"""
+    topic = f"yolouno/{device}"
+    mqtt_client.publish(topic, command)
+    print(f"Published command '{command}' to topic {topic}")
+
+# API để điều khiển thiết bị
+@app.route('/api/device/control', methods=['POST'])
+def control_device():
+    try:
+        data = request.json
+        device = data.get('device')
+        action = data.get('action')
+        
+        if not device or not action:
+            return jsonify({"error": "Missing device or action parameter"}), 400
+            
+        # Ánh xạ action thành command và trạng thái
+        command = "ON" if action == "on" else "OFF"
+        state = "active" if action == "on" else "inactive"
+        
+        # Cập nhật trạng thái trong MongoDB
+        update_device_state_in_db(device, state)
+        
+        # Gửi lệnh qua MQTT
+        publish_device_command(device, command)
+        
+        return jsonify({
+            "success": True,
+            "device": device,
+            "state": state
+        })
+        
+    except Exception as e:
+        print(f"Error controlling device: {e}")
+        return jsonify({"error": str(e)}), 500
 
 def run_sensor_data():
      os.system('python backend/sensor_data.py')

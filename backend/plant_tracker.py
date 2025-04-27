@@ -1,39 +1,41 @@
-import pandas as pd
-from datetime import datetime
+from datetime import datetime, timedelta
+from pymongo import MongoClient
 import os
 
 class PlantTracker:
-    def __init__(self, file_path='backend/Data/plant_records.csv'):
-        self.file_path = file_path
-        self.columns = ['plant_id', 'plant_name', 'planting_date', 'expected_harvest_date',
-                        'notes', 'status']
-
-        # Tạo file CSV nếu chưa tồn tại
-        if not os.path.exists(file_path):
-            df = pd.DataFrame(columns=self.columns)
-            df.to_csv(file_path, index=False)
+    def __init__(self, mongo_uri='mongodb://localhost:27017/', db_name='smartfarm'):
+        """Khởi tạo với kết nối MongoDB thay vì file CSV"""
+        # Kết nối với MongoDB
+        self.client = MongoClient(mongo_uri)
+        self.db = self.client[db_name]
+        self.plants_collection = self.db.plants_tracking  # Tạo collection riêng cho plant_tracker
+        
+        # Tạo index cho các trường tìm kiếm thường xuyên
+        self.plants_collection.create_index('plant_id')
 
     def add_plant(self, plant_name, growth_days, notes=""):
         """Thêm một cây mới vào hệ thống theo dõi"""
         try:
-            df = pd.read_csv(self.file_path)
-
-            # Tạo ID mới
-            plant_id = len(df) + 1
+            # Lấy plant_id cao nhất hiện tại và tăng lên 1
+            highest_plant = self.plants_collection.find_one(sort=[('plant_id', -1)])
+            plant_id = 1  # Mặc định nếu chưa có cây nào
+            
+            if highest_plant and 'plant_id' in highest_plant:
+                plant_id = highest_plant['plant_id'] + 1
+            
             planting_date = datetime.now()
-            expected_harvest_date = planting_date + pd.Timedelta(days=growth_days)
+            expected_harvest_date = planting_date + timedelta(days=growth_days)
 
-            new_plant = pd.DataFrame([{
+            new_plant = {
                 'plant_id': plant_id,
                 'plant_name': plant_name,
-                'planting_date': planting_date.strftime('%Y-%m-%d %H:%M:%S'),
-                'expected_harvest_date': expected_harvest_date.strftime('%Y-%m-%d %H:%M:%S'),
+                'planting_date': planting_date,
+                'expected_harvest_date': expected_harvest_date,
                 'notes': notes,
                 'status': 'growing'
-            }])
+            }
 
-            df = pd.concat([df, new_plant], ignore_index=True)
-            df.to_csv(self.file_path, index=False)
+            result = self.plants_collection.insert_one(new_plant)
             return plant_id
         except Exception as e:
             print(f"Error adding plant: {str(e)}")
@@ -42,28 +44,21 @@ class PlantTracker:
     def delete_plant(self, plant_id):
         """Xóa một cây khỏi hệ thống theo dõi"""
         try:
-            df = pd.read_csv(self.file_path)
-            if plant_id not in df['plant_id'].values:
-                return False
-
-            df = df[df['plant_id'] != plant_id]
-            df.to_csv(self.file_path, index=False)
-            return True
+            result = self.plants_collection.delete_one({'plant_id': plant_id})
+            return result.deleted_count > 0
         except Exception as e:
             print(f"Error deleting plant: {str(e)}")
             return False
 
     def get_plant_status(self, plant_id):
         """Lấy thông tin về tình trạng của cây"""
-        df = pd.read_csv(self.file_path)
-        plant = df[df['plant_id'] == plant_id]
+        plant = self.plants_collection.find_one({'plant_id': plant_id})
 
-        if plant.empty:
+        if not plant:
             return "Không tìm thấy cây với ID này"
 
-        plant = plant.iloc[0]
-        planting_date = pd.to_datetime(plant['planting_date'])
-        expected_harvest_date = pd.to_datetime(plant['expected_harvest_date'])
+        planting_date = plant['planting_date']
+        expected_harvest_date = plant['expected_harvest_date']
         current_date = datetime.now()
 
         days_since_planting = (current_date - planting_date).days
@@ -79,48 +74,51 @@ class PlantTracker:
 
     def update_plant_status(self, plant_id, status, notes=None):
         """Cập nhật trạng thái của cây"""
-        df = pd.read_csv(self.file_path)
-
-        if plant_id not in df['plant_id'].values:
-            return False
-
-        mask = df['plant_id'] == plant_id
-        df.loc[mask, 'status'] = status
+        update_data = {'status': status}
         if notes:
-            df.loc[mask, 'notes'] = notes
+            update_data['notes'] = notes
 
-        df.to_csv(self.file_path, index=False)
-        return True
+        result = self.plants_collection.update_one(
+            {'plant_id': plant_id},
+            {'$set': update_data}
+        )
+        return result.modified_count > 0
 
     def get_all_plants(self):
         """Lấy thông tin về tất cả các cây"""
-        df = pd.read_csv(self.file_path)
-        return df.to_dict('records')
+        cursor = self.plants_collection.find({})
+        plants = []
+        for plant in cursor:
+            # Chuyển ObjectId thành string để có thể serialize thành JSON
+            plant['_id'] = str(plant['_id'])
+            plants.append(plant)
+        return plants
 
     def get_alerts(self):
         """Kiểm tra và trả về các cảnh báo cho cây cần chăm sóc"""
-        df = pd.read_csv(self.file_path)
         current_date = datetime.now()
         alerts = []
 
-        for _, plant in df.iterrows():
-            if plant['status'] != 'harvested':
-                planting_date = pd.to_datetime(plant['planting_date'])
-                expected_harvest_date = pd.to_datetime(plant['expected_harvest_date'])
+        # Tìm tất cả cây chưa thu hoạch
+        plants = self.plants_collection.find({'status': {'$ne': 'harvested'}})
 
-                days_until_harvest = (expected_harvest_date - current_date).days
+        for plant in plants:
+            planting_date = plant['planting_date']
+            expected_harvest_date = plant['expected_harvest_date']
 
-                if days_until_harvest <= 7 and days_until_harvest >= 0:
-                    alerts.append({
-                        'plant_id': plant['plant_id'],
-                        'plant_name': plant['plant_name'],
-                        'message': f"Cây {plant['plant_name']} sẽ sẵn sàng thu hoạch trong {days_until_harvest} ngày"
-                    })
-                elif days_until_harvest < 0:
-                    alerts.append({
-                        'plant_id': plant['plant_id'],
-                        'plant_name': plant['plant_name'],
-                        'message': f"Cây {plant['plant_name']} đã đến thời gian thu hoạch"
-                    })
+            days_until_harvest = (expected_harvest_date - current_date).days
+
+            if days_until_harvest <= 7 and days_until_harvest >= 0:
+                alerts.append({
+                    'plant_id': plant['plant_id'],
+                    'plant_name': plant['plant_name'],
+                    'message': f"Cây {plant['plant_name']} sẽ sẵn sàng thu hoạch trong {days_until_harvest} ngày"
+                })
+            elif days_until_harvest < 0:
+                alerts.append({
+                    'plant_id': plant['plant_id'],
+                    'plant_name': plant['plant_name'],
+                    'message': f"Cây {plant['plant_name']} đã đến thời gian thu hoạch"
+                })
 
         return alerts
