@@ -4,15 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="e4ee1150-0bcd-4ac7-b9c6-33ec27c65123" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/Websitetest.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/Websitetest.iml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Data/sensor_data.csv" beforeDir="false" afterPath="$PROJECT_DIR$/Data/sensor_data.csv" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web" beforeDir="false" afterPath="$PROJECT_DIR$/web" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/src/components/views/Homepage_dashboard/dashboard.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/web/src/components/views/Homepage_dashboard/dashboard.jsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web_server.py" beforeDir="false" afterPath="$PROJECT_DIR$/web_server.py" afterDir="false" />
-    </list>
+    <list default="true" id="e4ee1150-0bcd-4ac7-b9c6-33ec27c65123" name="Changes" comment="" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -30,7 +22,7 @@
     </option>
   </component>
   <component name="Git.Settings">
-    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/web" />
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
   <component name="ProjectColorInfo">{
   &quot;associatedIndex&quot;: 7
@@ -40,23 +32,23 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;Python.Websitetest.executor&quot;: &quot;Run&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;web&quot;,
-    &quot;last_opened_file_path&quot;: &quot;C:/Users/Dell/PycharmProjects/Chatbot_test&quot;,
-    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
-    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
-    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
-    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
-    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;preferences.pluginManager&quot;,
-    &quot;ts.external.directory.path&quot;: &quot;C:\\Program Files\\JetBrains\\PyCharm 2024.3.1.1\\plugins\\javascript-plugin\\jsLanguageServicesImpl\\external&quot;,
-    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "Python.Websitetest.executor": "Run",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "git-widget-placeholder": "test",
+    "last_opened_file_path": "C:/Users/Dell/Desktop/New folder/All project/AI_assistance",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "settings.editor.selected.configurable": "preferences.pluginManager",
+    "ts.external.directory.path": "C:\\Program Files\\JetBrains\\PyCharm 2024.3.1.1\\plugins\\javascript-plugin\\jsLanguageServicesImpl\\external",
+    "vue.rearranger.settings.migration": "true"
   }
-}</component>
+}]]></component>
   <component name="RunManager">
     <configuration name="Websitetest" type="PythonConfigurationType" factoryName="Python">
       <module name="Websitetest" />
@@ -105,6 +97,7 @@
       <workItem from="1740131442629" duration="892000" />
       <workItem from="1740132360202" duration="442000" />
       <workItem from="1740303818100" duration="2000" />
+      <workItem from="1744072747056" duration="43000" />
     </task>
     <servers />
   </component>

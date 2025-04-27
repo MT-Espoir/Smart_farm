@@ -1,5 +1,9 @@
 # unit_tests.py
+<<<<<<< HEAD
 from ai_models.cnn_model import create_cnn_model, save_model, load_cnn_model
+=======
+from chatbot_models.cnn_model import create_cnn_model, save_model, load_cnn_model
+>>>>>>> test
 
 def test_model_save_load():
     model = create_cnn_model()

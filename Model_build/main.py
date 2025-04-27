@@ -1,5 +1,9 @@
 from data_process.image_data_processing import load_and_preprocess_data, analyze_data_structure
+<<<<<<< HEAD
 from ai_models.cnn_model import build_cnn_model, train_model
+=======
+from chatbot_models.cnn_model import build_cnn_model, train_model
+>>>>>>> test
 from testing.test_disease_model.test_disease_model import evaluate_model, predict_on_test_directory
 import tensorflow as tf
 import os

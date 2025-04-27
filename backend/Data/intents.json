@@ -1,0 +1,36 @@
+{
+  "sections": {
+    "response": [
+        {
+            "tag": "needhelp",
+            "patterns": ["Tôi cần hỗ trợ", "Tôi cần giúp đỡ", "Tôi cần tư vấn", "Kiểm tra", "kiem tra"],
+            "responses": ["Tôi có thể giúp gì cho bạn?"],
+            "context": [""]
+        },
+        {
+            "tag": "Question for system status",
+            "patterns": ["Trạng thái hệ thống", "Hệ thống hoạt động tốt không", "Hệ thống có vấn đề không", "Tình trạng cảm biến", "hệ thống", "he thong", "cam bien", "cảm biến", "vấn đề", "van de"],
+            "responses": ["Tôi sẽ tiến hành kiểm tra ngay lập tức!"],
+            "context": [""]
+        },
+        {
+          "tag": "Question for info",
+          "patterns": ["Nhiệt độ", "Độ ẩm", "Ánh sáng", "Nhiệt độ hiện tại", "Độ ẩm hiện tại", "Ánh sáng hiện tại", "Có mưa không", "nhiet do", "do am", "nhiet do hien tại","do am hien tai","anh sang hien tai","mưa"],
+          "responses": ["Đợi tôi một lát"],
+          "context": [""]
+        },
+        {
+          "tag": "Question for info1",
+          "patterns": ["Các cây nào sắp thu hoạch", "đang có cây nào trong vườn", "Cây nào cần chăm sóc", "chăm sóc","cham soc", "cây trồng", "cay trong", "vườn", "vuon"],
+          "responses": ["Đợi tôi một lát"],
+          "context": [""]
+        },
+        {
+          "tag": "Full info",
+          "patterns": ["info", "thông tin", "dữ liệu", "tất cả thông tin", "tổng quan", "thong tin", "du lieu", "tat ca thong tin", "tong quan"],
+          "responses": ["Tôi sẽ kiểm tra"],
+          "context": [""]
+        }
+    ]
+  }
+}
