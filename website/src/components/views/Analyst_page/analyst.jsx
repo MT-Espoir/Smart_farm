@@ -2,6 +2,7 @@ import React from "react";
 import { useState, useEffect } from "react";
 import FetchData from "./fechdata";
 import { Line } from 'react-chartjs-2';
+import AnalystDetail from "./analyst_detail";
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -35,7 +36,7 @@ function AnalystPage() {
   });
   
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]); // Default to today
-  const [viewMode, setViewMode] = useState("live"); // "live" or "historical"
+  const [viewMode, setViewMode] = useState("live"); // "live", "historical", or "analytics"
   const [isLoading, setIsLoading] = useState(false);
   const [calendarOpen, setCalendarOpen] = useState(false);
   
@@ -127,6 +128,19 @@ function AnalystPage() {
       }
   };
   
+  // Toggle analytics view
+  const toggleAnalyticsView = () => {
+      if (viewMode === "analytics") {
+          // If currently in analytics view, switch to live mode
+          setViewMode("live");
+          setCalendarOpen(false);
+      } else {
+          // If in live or historical mode, switch to analytics view
+          setViewMode("analytics");
+          setCalendarOpen(false);
+      }
+  };
+
   // Quick date selection
   const selectPreviousDay = (daysAgo) => {
       const date = new Date();
@@ -209,15 +223,27 @@ function AnalystPage() {
   return (
     <div className="p-8">
       <div className="flex justify-between items-center mb-4">
-        <button 
-          onClick={toggleCalendar}
-          className="px-4 py-2 bg-green-600 text-white rounded-lg shadow-md flex items-center"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-          </svg>
-          Lịch
-        </button>
+        <div className="flex space-x-3">
+          <button 
+            onClick={toggleCalendar}
+            className={`px-4 py-2 ${viewMode === "historical" ? "bg-blue-600" : "bg-green-600"} text-white rounded-lg shadow-md flex items-center`}
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+            Lịch
+          </button>
+          
+          <button 
+            onClick={toggleAnalyticsView}
+            className={`px-4 py-2 ${viewMode === "analytics" ? "bg-blue-600" : "bg-green-600"} text-white rounded-lg shadow-md flex items-center`}
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 01-2-2z" />
+            </svg>
+            Phân tích chi tiết
+          </button>
+        </div>
         
         {calendarOpen && (
           <div className="flex flex-wrap items-center gap-2">
@@ -258,7 +284,9 @@ function AnalystPage() {
         )}
       </div>
       
-      {isLoading ? (
+      {viewMode === "analytics" ? (
+        <AnalystDetail />
+      ) : isLoading ? (
         <div className="flex justify-center items-center h-40">
           <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-green-500"></div>
         </div>

@@ -18,8 +18,10 @@ from datetime import datetime
 from chatbot import chatbot_service
 from pymongo import MongoClient
 from bson.objectid import ObjectId
+from eda import get_daily_statistics, get_correlation_analysis, get_hourly_patterns, generate_charts
+from eda import find_optimal_conditions, anomaly_detection, get_seasonal_analysis
 
-app = Flask(__name__)
+app = Flask(__name__, template_folder='../templates')
 app.config['SECRET_KEY'] = 'secret!'
 CORS(app, resources={
     r"/api/*": {
@@ -203,8 +205,13 @@ def get_sensor_data():
         if not records:
             return jsonify([]), 200
             
-        # Convert datetime objects to ISO format strings for JSON serialization
+        # Convert ObjectId and datetime objects for JSON serialization
         for record in records:
+            # Convert ObjectId to string
+            if '_id' in record:
+                record['_id'] = str(record['_id'])
+                
+            # Convert datetime objects to ISO format strings
             if 'timestamp' in record and record['timestamp']:
                 record['timestamp'] = record['timestamp'].isoformat()
         
@@ -668,6 +675,76 @@ def control_device():
     except Exception as e:
         print(f"Error controlling device: {e}")
         return jsonify({"error": str(e)}), 500
+
+# API cho EDA (Exploratory Data Analysis)
+@app.route('/api/analytics/daily-statistics', methods=['GET'])
+def api_daily_statistics():
+    try:
+        days = request.args.get('days', default=7, type=int)
+        result = get_daily_statistics(days)
+        return jsonify(result)
+    except Exception as e:
+        print(f"Error in daily statistics API: {e}")
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/api/analytics/correlation', methods=['GET'])
+def api_correlation():
+    try:
+        result = get_correlation_analysis()
+        return jsonify(result)
+    except Exception as e:
+        print(f"Error in correlation analysis API: {e}")
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/api/analytics/hourly-patterns', methods=['GET'])
+def api_hourly_patterns():
+    try:
+        result = get_hourly_patterns()
+        return jsonify(result)
+    except Exception as e:
+        print(f"Error in hourly patterns API: {e}")
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/api/analytics/optimal-conditions', methods=['GET'])
+def api_optimal_conditions():
+    try:
+        result = find_optimal_conditions()
+        return jsonify(result)
+    except Exception as e:
+        print(f"Error in optimal conditions API: {e}")
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/api/analytics/anomalies', methods=['GET'])
+def api_anomalies():
+    try:
+        result = anomaly_detection()
+        return jsonify(result)
+    except Exception as e:
+        print(f"Error in anomaly detection API: {e}")
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/api/analytics/seasonal', methods=['GET'])
+def api_seasonal():
+    try:
+        result = get_seasonal_analysis()
+        return jsonify(result)
+    except Exception as e:
+        print(f"Error in seasonal analysis API: {e}")
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/api/analytics/charts', methods=['GET'])
+def api_charts():
+    try:
+        result = generate_charts()
+        return jsonify(result)
+    except Exception as e:
+        print(f"Error in charts API: {e}")
+        return jsonify({"error": str(e)}), 500
+
+# Route hiển thị trang EDA
+@app.route('/analytics', methods=['GET'])
+def analytics_dashboard():
+    return render_template('analytics.html')
 
 def run_sensor_data():
      os.system('python backend/sensor_data.py')
